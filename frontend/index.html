@@ -503,6 +503,47 @@
     gap: 4px;
   }
 
+  /* Like/Dislike — fine-tuning dataset uchun baholash */
+  .msg.bot .rate-row {
+    margin-top: 8px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .rate-btn {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-faded);
+    transition: all 0.15s ease;
+    line-height: 1;
+  }
+  .rate-btn:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+  .rate-btn.active-like {
+    background: var(--success-soft);
+    border-color: var(--success);
+    color: var(--success);
+  }
+  .rate-btn.active-dislike {
+    background: var(--danger-soft);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .rate-hint {
+    font-size: 10px;
+    color: var(--text-faded);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .msg.bot:hover .rate-hint { opacity: 1; }
+
   /* Attach (fayl) messages */
   .msg.attach {
     align-self: flex-end;
@@ -1881,10 +1922,65 @@ function renderMsg(msg) {
       }
       div.appendChild(meta);
     }
+    // 👍👎 — javobni baholash (fine-tuning dataset uchun)
+    if (msg.id && (msg.text || '').trim()) {
+      div.appendChild(buildRateRow(msg));
+    }
   }
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
   return div;
+}
+
+// Like/dislike qatori — bot xabari ostida
+function buildRateRow(msg) {
+  const row = document.createElement('div');
+  row.className = 'rate-row';
+  row.dataset.msgId = msg.id;
+
+  const likeBtn = document.createElement('button');
+  likeBtn.className = 'rate-btn' + (msg.rating === 1 ? ' active-like' : '');
+  likeBtn.textContent = '👍';
+  likeBtn.title = 'Yaxshi javob — fine-tuning datasetga qoʻshiladi';
+  likeBtn.onclick = () => rateMsg(msg, 1, row);
+
+  const dislikeBtn = document.createElement('button');
+  dislikeBtn.className = 'rate-btn' + (msg.rating === -1 ? ' active-dislike' : '');
+  dislikeBtn.textContent = '👎';
+  dislikeBtn.title = 'Yomon javob';
+  dislikeBtn.onclick = () => rateMsg(msg, -1, row);
+
+  const hint = document.createElement('span');
+  hint.className = 'rate-hint';
+  hint.textContent = msg.rating === 1 ? 'Datasetga belgilandi' : 'Javobni baholang';
+
+  row.appendChild(likeBtn);
+  row.appendChild(dislikeBtn);
+  row.appendChild(hint);
+  return row;
+}
+
+async function rateMsg(msg, value, row) {
+  // Xuddi shu tugma qayta bosilsa — bahoni olib tashlash
+  const newRating = (msg.rating === value) ? null : value;
+  try {
+    const r = await apiFetch(`${API}/api/workspaces/${currentWsId}/messages/${msg.id}/rate`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({rating: newRating}),
+    });
+    if (!r.ok) throw new Error((await r.json()).detail || 'xato');
+    msg.rating = newRating;
+    // UI yangilash
+    const [likeBtn, dislikeBtn, hint] = row.children;
+    likeBtn.className = 'rate-btn' + (newRating === 1 ? ' active-like' : '');
+    dislikeBtn.className = 'rate-btn' + (newRating === -1 ? ' active-dislike' : '');
+    hint.textContent = newRating === 1 ? 'Datasetga belgilandi ✓'
+                     : newRating === -1 ? 'Yomon deb belgilandi'
+                     : 'Javobni baholang';
+  } catch (e) {
+    console.warn('Rate xato:', e);
+  }
 }
 
 function renderChat() {
@@ -2264,6 +2360,11 @@ async function ask() {
     botMsg.sources = sources;
     if (botMsg.elapsed_ms == null) botMsg.elapsed_ms = elapsed;
     if (botMsg.tokens_per_sec == null) botMsg.tokens_per_sec = tps > 0 ? tps : null;
+
+    // 👍👎 baholash qatori (botMsg.id saved event'dan keldi)
+    if (botMsg.id && text.trim()) {
+      botDiv.appendChild(buildRateRow(botMsg));
+    }
   } catch (e) {
     clearInterval(timerHandle);
     botDiv.classList.remove('streaming');
@@ -2986,15 +3087,27 @@ async function ftDeleteDataset(id) {
 }
 
 async function ftImportChat(id) {
-  const wid = prompt('Workspace ID (bo\'sh qoldirsangiz, barcha chatlardan):') || '';
-  const onlyGood = confirm('Faqat yaxshi javoblarni (RAG mode bilan) olamizmi?');
+  // Import rejimi: 1 = faqat 👍 liked (tavsiya), 2 = barcha yaxshi RAG javoblar
+  const mode = prompt(
+    'Import rejimini tanlang:\n\n' +
+    '1 — Faqat 👍 like bosilgan javoblar (eng sifatli, tavsiya)\n' +
+    '2 — Barcha yaxshi RAG javoblar (👎 bosilganlardan tashqari)\n\n' +
+    'Raqam kiriting:', '1');
+  if (mode === null) return;
+  const onlyLiked = mode.trim() === '1';
+  const wid = prompt('Workspace ID (bo\'sh — barcha chatlardan):') || '';
   try {
     const r = await apiFetch(`${API}/api/finetune/datasets/${id}/import_chat`, {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({workspace_id: wid || null, only_good: onlyGood})
+      body: JSON.stringify({
+        workspace_id: wid || null,
+        only_good: true,
+        only_liked: onlyLiked,
+      })
     });
     const j = await r.json();
-    alert(`✓ ${j.added} ta misol qo\'shildi`);
+    alert(`✓ ${j.added} ta misol qo\'shildi` +
+          (onlyLiked ? ' (faqat 👍 liked)' : ' (barcha yaxshi javoblar)'));
     renderDatasets();
   } catch (e) { alert('Xato: ' + e.message); }
 }

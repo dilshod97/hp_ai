@@ -629,6 +629,25 @@ async def delete_message(wid: str, mid: int, user: dict = Depends(current_user))
     return {"ok": True}
 
 
+class RateBody(BaseModel):
+    # 1 = like, -1 = dislike, null = bahoni olib tashlash
+    rating: Optional[int] = None
+
+
+@router.post("/{wid}/messages/{mid}/rate")
+async def rate_message(
+    wid: str, mid: int, body: RateBody, user: dict = Depends(current_user)
+):
+    """Bot javobini baholash — like'lar fine-tuning dataset uchun yigʻiladi."""
+    _resolve(wid, None, user=user)
+    if body.rating not in (1, -1, None):
+        raise HTTPException(status_code=400, detail="rating: 1, -1 yoki null")
+    result = await msgs.rate_message(mid, body.rating, rated_by=user.get("id"))
+    if not result:
+        raise HTTPException(status_code=404, detail="Bot xabari topilmadi")
+    return result
+
+
 # ---------- Eksport (PDF / Word) ----------
 
 @router.get("/{wid}/export")

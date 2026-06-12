@@ -132,13 +132,12 @@ async def import_from_chat(
     dataset_id: int,
     workspace_id: str | None = None,
     only_good: bool = True,
+    only_liked: bool = False,
 ) -> int:
     """Chat tarixidagi user-bot juftliklarini dataset'ga qoʻshish.
 
-    only_good=True bo'lsa, faqat:
-    - mode='rag' (haqiqiy hujjatdan javob)
-    - sources mavjud
-    - error bo'lmagan
+    only_liked=True — faqat 👍 bosilgan javoblar (eng sifatli, RLHF-style).
+    only_good=True — mode='rag', bo'sh emas, xatosiz javoblar.
     """
     async with SessionLocal() as s:
         q = select(Message).order_by(Message.id.asc())
@@ -146,14 +145,32 @@ async def import_from_chat(
             q = q.where(Message.workspace_id == workspace_id)
         msgs = (await s.execute(q)).scalars().all()
 
+        # Takroriy import oldini olish — allaqachon datasetdagi message_id'lar
+        existing_q = select(DatasetItem.source_message_id).where(
+            DatasetItem.dataset_id == dataset_id,
+            DatasetItem.source_message_id.isnot(None),
+        )
+        existing_ids = {r[0] for r in (await s.execute(existing_q)).all()}
+
         added = 0
         prev_user = None
         for m in msgs:
             if m.role == "user":
                 prev_user = m
             elif m.role == "bot" and prev_user is not None:
-                # Filter
-                if only_good:
+                if m.id in existing_ids:
+                    prev_user = None
+                    continue
+                # Like filtri — eng yuqori ustunlik
+                if only_liked:
+                    if m.rating != 1:
+                        prev_user = None
+                        continue
+                elif only_good:
+                    # Dislike bosilganlarni hech qachon olmaymiz
+                    if m.rating == -1:
+                        prev_user = None
+                        continue
                     if m.mode != "rag":
                         prev_user = None
                         continue
@@ -163,14 +180,17 @@ async def import_from_chat(
                     if "xato" in (m.text or "").lower()[:50]:
                         prev_user = None
                         continue
-                # Item yaratish
+                if not (m.text or "").strip():
+                    prev_user = None
+                    continue
+                # Item yaratish — like bosilganlar eng yuqori sifat
                 item = DatasetItem(
                     dataset_id=dataset_id,
                     instruction=prev_user.text,
                     input_text=None,
                     output=m.text,
                     source_message_id=m.id,
-                    quality=4 if m.mode == "rag" else 3,
+                    quality=5 if m.rating == 1 else (4 if m.mode == "rag" else 3),
                 )
                 s.add(item)
                 added += 1

@@ -43,6 +43,7 @@ class UpdateItemBody(BaseModel):
 class ImportFromChatBody(BaseModel):
     workspace_id: Optional[str] = None
     only_good: bool = True
+    only_liked: bool = False  # faqat 👍 bosilgan javoblar
 
 
 class StartJobBody(BaseModel):
@@ -108,7 +109,9 @@ async def delete_item(ds_id: int, item_id: int, _: dict = Depends(require_admin)
 async def import_from_chat(
     ds_id: int, body: ImportFromChatBody, _: dict = Depends(require_admin)
 ):
-    n = await ds_svc.import_from_chat(ds_id, body.workspace_id, body.only_good)
+    n = await ds_svc.import_from_chat(
+        ds_id, body.workspace_id, body.only_good, only_liked=body.only_liked
+    )
     return {"added": n}
 
 

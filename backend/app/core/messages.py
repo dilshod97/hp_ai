@@ -81,6 +81,21 @@ async def clear_messages(workspace_id: str) -> int:
         return result.rowcount or 0
 
 
+async def rate_message(
+    message_id: int, rating: int | None, rated_by: int | None = None
+) -> dict | None:
+    """Xabarni baholash: 1=like, -1=dislike, None=bahoni olib tashlash."""
+    async with SessionLocal() as s:
+        msg = await s.get(Message, message_id)
+        if not msg or msg.role != "bot":
+            return None
+        msg.rating = rating
+        msg.rated_by = rated_by if rating is not None else None
+        await s.commit()
+        await s.refresh(msg)
+        return msg.to_dict()
+
+
 async def delete_message(message_id: int) -> bool:
     async with SessionLocal() as s:
         msg = await s.get(Message, message_id)

@@ -180,6 +180,10 @@ class Message(Base):
     elapsed_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     tokens_per_sec: Mapped[float | None] = mapped_column(Float, nullable=True)
     eval_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Foydalanuvchi bahosi: 1 = like (dataset uchun), -1 = dislike, None = baholanmagan
+    rating: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    # Kim baholadi (fine-tuning sifat nazorati uchun)
+    rated_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, index=True, nullable=False
     )
@@ -195,6 +199,8 @@ class Message(Base):
             "elapsed_ms": self.elapsed_ms,
             "tokens_per_sec": self.tokens_per_sec,
             "eval_count": self.eval_count,
+            "rating": self.rating,
+            "rated_by": self.rated_by,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
