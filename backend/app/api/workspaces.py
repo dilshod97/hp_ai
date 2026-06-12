@@ -281,7 +281,6 @@ async def ws_ask(
     scope = list(ws.get("scope") or [])
 
     # PRIORITET 1: Shu so'rov bilan fayl yuklangan — faqat shu fayl(lar)ga filter
-    # Va scope'ga uploads qoʻshamiz (Erkin chat'da scope=[] bo'lsa ham ishlashi uchun)
     if body.active_doc_ids:
         doc_ids_list = body.active_doc_ids
         if "uploads" not in scope:
@@ -293,6 +292,11 @@ async def ws_ask(
             doc_ids_list = [last_doc]
             if "uploads" not in scope:
                 scope.append("uploads")
+
+    # ❗ MUHIM: workspace'da fayl biriktirilgan bo'lsa — har doim "uploads" qo'shamiz
+    # (chat scope ["reports"] bo'lsa ham, attach qilingan fayllar qidirilsin)
+    if doc_ids_list and "uploads" not in scope:
+        scope.append("uploads")
 
     rag_user_id = None
     if user and user.get("role") != "admin":
@@ -361,6 +365,10 @@ async def ws_ask_stream(
             doc_ids_list = [last_doc]
             if "uploads" not in scope:
                 scope.append("uploads")
+
+    # ❗ Workspace'da fayl biriktirilgan bo'lsa — har doim "uploads" qo'shamiz
+    if doc_ids_list and "uploads" not in scope:
+        scope.append("uploads")
 
     rag_user_id = None
     if user and user.get("role") != "admin":
