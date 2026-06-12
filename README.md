@@ -48,7 +48,7 @@ docker-compose up -d --build
 ```
 
 Servislar:
-- **Frontend:** http://localhost:8080
+- **Frontend:** http://localhost:8088
 - **Backend API:** http://localhost:8000 (Swagger: `/docs`)
 - **Qdrant UI:** http://localhost:6333/dashboard
 
@@ -72,7 +72,7 @@ Quyidagi loglarni koʻrasiz:
 
 ### 4) Hujjatlarni indekslang
 
-**Variant A — UI orqali:** brauzerda http://localhost:8080 ga kiring, faylni sudrab tashlang.
+**Variant A — UI orqali:** brauzerda http://localhost:8088 ga kiring, faylni sudrab tashlang.
 
 **Variant B — papkadan ommaviy:**
 
