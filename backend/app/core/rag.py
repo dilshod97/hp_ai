@@ -124,9 +124,17 @@ async def _gather_hits(
     filter_: dict | None = None,
     final_top_k: int | None = None,
 ) -> list[dict]:
+    """Bir nechta kollektsiyadan qidirish.
+
+    MUHIM: doc_id/user_id filtrlar FAQAT 'uploads' kollektsiyasiga qoʻllanadi.
+    Bilim bazasi (laws, audit_reports) — umumiy, filtersiz qidiriladi.
+    Aks holda chatga fayl biriktirilganda bilim bazasi yashirilib qolardi.
+    """
+    uploads_col = settings.QDRANT_COLLECTION_UPLOADS
     all_hits: list[dict] = []
     for col in collections:
-        hits = await vector_store.search(col, query_vec, top_k=top_k_each, filter_=filter_)
+        col_filter = filter_ if col == uploads_col else None
+        hits = await vector_store.search(col, query_vec, top_k=top_k_each, filter_=col_filter)
         for h in hits:
             h["payload"]["_collection"] = col
         all_hits.extend(hits)
