@@ -31,8 +31,16 @@ async def ingest_file(
     doc_id = str(uuid.uuid4())
     filename = os.path.basename(path)
 
-    payloads = []
-    for i, ch in enumerate(chunks):
+    # ❗ Nol vektorli chunklarni o'tkazib yuboramiz — bu embed xatosi
+    # (Ollama NaN qaytargan paytda zero-vector qaytarilgan)
+    valid_vectors = []
+    valid_payloads = []
+    skipped_zero = 0
+    for i, (vec, ch) in enumerate(zip(vectors, chunks)):
+        # Nol vektor — chunkni saqlamasdan o'tkazib yuborish
+        if not any(x != 0.0 for x in vec):
+            skipped_zero += 1
+            continue
         payload = {
             "doc_id": doc_id,
             "source": filename,
@@ -43,9 +51,21 @@ async def ingest_file(
             payload["user_id"] = user_id
         if extra_payload:
             payload.update(extra_payload)
-        payloads.append(payload)
+        valid_vectors.append(vec)
+        valid_payloads.append(payload)
 
-    await vector_store.upsert(collection, vectors, payloads)
+    if skipped_zero > 0:
+        import logging
+        logging.getLogger("ingest").warning(
+            "📍 %s: %d/%d chunk nol vektorli edi (embed xatosi), o'tkazib yuborildi",
+            filename, skipped_zero, len(chunks),
+        )
+
+    if not valid_vectors:
+        return {"doc_id": None, "chunks": 0, "skipped": True,
+                "error": "Hamma chunklar embedding xato bilan tugadi"}
+
+    await vector_store.upsert(collection, valid_vectors, valid_payloads)
 
     # Markaziy registrga yozish (Documents jadvali)
     try:
@@ -61,10 +81,10 @@ async def ingest_file(
             workspace_id=workspace_id,
             collection=collection,
             size_bytes=size_bytes,
-            chunks=len(chunks),
+            chunks=len(valid_vectors),  # Faqat haqiqiy saqlangan chunks
             mime=mime,
             ocr_used=False,
-            file_path=path,  # Asl fayl saqlangan joy (download/preview uchun)
+            file_path=path,
         )
     except Exception:
         # Registry xatosi ingest'ni to'xtatmasin
@@ -72,8 +92,9 @@ async def ingest_file(
 
     return {
         "doc_id": doc_id, "filename": filename,
-        "chunks": len(chunks), "collection": collection,
+        "chunks": len(valid_vectors), "collection": collection,
         "size_bytes": size_bytes,
+        "skipped_zero": skipped_zero if skipped_zero else None,
     }
 
 
