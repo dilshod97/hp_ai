@@ -1,0 +1,3760 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HP-AI audit assistant</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+<style>
+  /* ============================================
+     HP-AI Modern Design System
+     Linear / Claude / ChatGPT inspired
+     ============================================ */
+  :root {
+    /* Backgrounds — tiered elevation */
+    --bg-base: #0a0a0c;
+    --bg-elevated: #131316;
+    --bg-overlay: #1c1c20;
+    --bg-input: #0e0e10;
+    --bg-hover: #1e1e22;
+
+    /* Borders — subtle hierarchy */
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-default: rgba(255, 255, 255, 0.09);
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    /* Text — proper contrast */
+    --text-primary: #fafafa;
+    --text-secondary: #c4c4c7;
+    --text-muted: #888890;
+    --text-faded: #5d5d65;
+
+    /* Accent — premium gradient ready */
+    --accent: #7c5cff;
+    --accent-hover: #8d70ff;
+    --accent-glow: rgba(124, 92, 255, 0.4);
+    --accent-soft: rgba(124, 92, 255, 0.12);
+    --gradient: linear-gradient(135deg, #7c5cff 0%, #5e9eff 100%);
+    --gradient-soft: linear-gradient(135deg, rgba(124,92,255,.15) 0%, rgba(94,158,255,.15) 100%);
+
+    /* Status */
+    --success: #10b981;
+    --success-soft: rgba(16, 185, 129, 0.12);
+    --warning: #f59e0b;
+    --warning-soft: rgba(245, 158, 11, 0.12);
+    --danger: #ef4444;
+    --danger-soft: rgba(239, 68, 68, 0.12);
+    --info: #3b82f6;
+    --info-soft: rgba(59, 130, 246, 0.12);
+
+    /* Shadows — depth */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 24px var(--accent-glow);
+
+    /* Radii */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 20px;
+    --radius-full: 999px;
+
+    /* Aliases — kompatibellik uchun (eski kod ishlatadi) */
+    --bg: var(--bg-base);
+    --panel: var(--bg-elevated);
+    --panel-2: var(--bg-overlay);
+    --panel-3: var(--bg-hover);
+    --text: var(--text-primary);
+    --muted: var(--text-muted);
+    --accent-2: #5e9eff;
+    --ok: var(--success);
+    --warn: var(--warning);
+    --err: var(--danger);
+    --border: var(--border-default);
+  }
+
+  /* ========== Base ========== */
+  * { box-sizing: border-box; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: var(--radius-full);
+    border: 2px solid var(--bg-base);
+  }
+  *::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    display: flex;
+    overflow: hidden;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+  }
+
+  button, input, textarea, select {
+    font-family: inherit;
+    letter-spacing: inherit;
+  }
+
+  /* ========== Sidebar ========== */
+  aside {
+    width: 280px;
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  aside .brand {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  aside .brand h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  aside .brand .sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .new-chat {
+    margin: 14px 16px 8px;
+    padding: 11px 14px;
+    background: var(--gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.18s ease;
+    letter-spacing: -0.01em;
+  }
+  .new-chat:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+  }
+  .new-chat:active { transform: translateY(0); }
+
+  .ws-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 8px 12px;
+  }
+  .ws-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    margin: 2px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+    position: relative;
+    border: 1px solid transparent;
+  }
+  .ws-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+  .ws-item.active {
+    background: var(--accent-soft);
+    color: var(--text-primary);
+    border-color: var(--accent-soft);
+  }
+  .ws-item.active::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  }
+  .ws-item .icon { font-size: 15px; flex-shrink: 0; }
+  .ws-item .name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+  .ws-item .menu {
+    opacity: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+  }
+  .ws-item .menu:hover { background: var(--bg-overlay); color: var(--text-primary); }
+  .ws-item:hover .menu, .ws-item.active .menu { opacity: 1; }
+
+  aside .footer {
+    border-top: 1px solid var(--border-subtle);
+    padding: 10px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  aside .footer button {
+    flex: 1;
+    min-width: 36px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 8px 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  aside .footer button:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-default);
+  }
+
+  /* ========== Main ========== */
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--bg-base);
+  }
+  header.top {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-base);
+    backdrop-filter: blur(12px);
+    position: relative;
+    z-index: 2;
+  }
+  header.top .title {
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.015em;
+  }
+  header.top .title .icon { font-size: 20px; }
+  header.top .actions { display: flex; gap: 8px; align-items: center; }
+  header.top .status {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 4px 10px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-subtle);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  header.top .status .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    box-shadow: 0 0 8px currentColor;
+  }
+  header.top .status.ok { color: var(--success); }
+  header.top .status.ok .dot { background: var(--success); }
+  header.top .status.err { color: var(--danger); }
+  header.top .status.err .dot { background: var(--danger); }
+
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    padding: 7px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .icon-btn:hover {
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+  }
+
+  /* ========== Chat area ========== */
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 920px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .msg {
+    max-width: 82%;
+    padding: 14px 18px;
+    border-radius: var(--radius-xl);
+    line-height: 1.6;
+    word-wrap: break-word;
+    font-size: 14.5px;
+    animation: msgIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: var(--gradient);
+    color: white;
+    border-bottom-right-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    font-weight: 500;
+  }
+  .msg.bot {
+    align-self: flex-start;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-bottom-left-radius: var(--radius-sm);
+    color: var(--text-primary);
+  }
+  .msg.bot.streaming { white-space: pre-wrap; }
+  .msg.bot .mode-badge { display: none; }
+  .msg.bot .live-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--accent);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    margin-bottom: 8px;
+    padding: 5px 10px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--accent-soft);
+    font-weight: 600;
+  }
+  .msg.bot .live-timer .spinner {
+    width: 11px;
+    height: 11px;
+    border: 2px solid var(--border-strong);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .msg.bot .md > *:first-child { margin-top: 0; }
+  .msg.bot .md > *:last-child { margin-bottom: 0; }
+  .msg.bot .md p { margin: 0.6em 0; }
+  .msg.bot .md h1, .msg.bot .md h2, .msg.bot .md h3, .msg.bot .md h4 {
+    margin: 1em 0 0.5em;
+    color: var(--text-primary);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .msg.bot .md h1 { font-size: 20px; }
+  .msg.bot .md h2 { font-size: 17px; }
+  .msg.bot .md h3 { font-size: 15px; color: var(--accent); }
+  .msg.bot .md h4 { font-size: 14px; color: var(--accent); }
+  .msg.bot .md strong { color: var(--text-primary); font-weight: 700; }
+  .msg.bot .md em { color: var(--accent); font-style: normal; font-weight: 500; }
+  .msg.bot .md ul, .msg.bot .md ol { margin: 0.5em 0; padding-left: 24px; }
+  .msg.bot .md li { margin: 0.3em 0; }
+  .msg.bot .md li::marker { color: var(--accent); }
+  .msg.bot .md a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent-soft);
+    transition: border-color 0.15s;
+  }
+  .msg.bot .md a:hover { border-bottom-color: var(--accent); }
+  .msg.bot .md blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 0.4em 1em;
+    margin: 0.6em 0;
+    color: var(--text-secondary);
+    background: var(--accent-soft);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-style: italic;
+  }
+  .msg.bot .md hr {
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+    margin: 1.2em 0;
+  }
+  .msg.bot .md code {
+    background: var(--bg-base);
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--accent);
+    border: 1px solid var(--border-subtle);
+  }
+  .msg.bot .md pre {
+    background: var(--bg-base);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    overflow-x: auto;
+    margin: 0.7em 0;
+  }
+  .msg.bot .md pre code {
+    background: transparent;
+    padding: 0;
+    color: var(--text-primary);
+    font-size: 12.5px;
+    border: none;
+  }
+  .msg.bot .md table {
+    border-collapse: collapse;
+    margin: 0.8em 0;
+    width: 100%;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    font-size: 13.5px;
+  }
+  .msg.bot .md table thead {
+    background: var(--bg-overlay);
+  }
+  .msg.bot .md table th, .msg.bot .md table td {
+    border: 1px solid var(--border-subtle);
+    padding: 9px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .msg.bot .md table th {
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .msg.bot .md table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.015);
+  }
+  .msg.bot .md table tbody tr:hover { background: var(--accent-soft); }
+
+  .msg.bot .sources {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .msg.bot .sources b { color: var(--accent); font-weight: 600; }
+  .msg.bot .sources .s { display: block; margin-top: 4px; }
+  .msg.bot .meta {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-faded);
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-weight: 500;
+  }
+  .msg.bot .meta .item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Attach (fayl) messages */
+  .msg.attach {
+    align-self: flex-end;
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-size: 13px;
+    padding: 12px 14px;
+    max-width: 340px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+  }
+  .msg.attach .file-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+  .msg.attach .file-link:hover { color: var(--accent); }
+  .msg.attach .file-icon { font-size: 28px; flex-shrink: 0; line-height: 1; }
+  .msg.attach .file-info { flex: 1; min-width: 0; }
+  .msg.attach .file-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13.5px;
+  }
+  .msg.attach .file-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+  .msg.attach .file-preview {
+    margin-top: 10px;
+    border-radius: var(--radius-md);
+    max-width: 100%;
+    max-height: 220px;
+    cursor: pointer;
+    display: block;
+    border: 1px solid var(--border-default);
+  }
+
+  /* ========== Compose / Input ========== */
+  footer.compose {
+    padding: 16px 24px 24px;
+    background: var(--bg-base);
+    border-top: 1px solid var(--border-subtle);
+    max-width: 920px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .pending-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .pending-files .chip {
+    background: var(--accent-soft);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--accent-soft);
+  }
+  .pending-files .chip button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .pending-files .chip button:hover { color: var(--danger); }
+
+  .input-shell {
+    display: flex;
+    align-items: end;
+    gap: 8px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    padding: 10px;
+    transition: all 0.18s ease;
+  }
+  .input-shell:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .attach-btn, .mic-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .attach-btn:hover, .mic-btn:hover {
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+  }
+  .mic-btn.recording {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  }
+  .mic-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  textarea#q {
+    flex: 1;
+    min-height: 38px;
+    max-height: 240px;
+    padding: 9px 10px;
+    background: transparent;
+    color: var(--text-primary);
+    border: none;
+    font-family: inherit;
+    font-size: 14.5px;
+    resize: none;
+    outline: none;
+    line-height: 1.5;
+  }
+  textarea#q::placeholder {
+    color: var(--text-faded);
+    font-size: 13.5px;
+  }
+
+  .send-btn {
+    background: var(--gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0 20px;
+    height: 38px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13.5px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.15s ease;
+    letter-spacing: -0.01em;
+  }
+  .send-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+  }
+  .send-btn:active { transform: translateY(0); }
+  .send-btn:disabled {
+    background: var(--bg-overlay);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  #file_picker { display: none; }
+
+  .hint-row {
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+  }
+
+  .quick-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .quick-btns button {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-full);
+    padding: 5px 12px;
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-weight: 500;
+  }
+  .quick-btns button:hover {
+    background: var(--accent-soft);
+    color: var(--text-primary);
+    border-color: var(--accent-soft);
+  }
+
+  /* ========== Modal ========== */
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-2xl);
+    width: min(680px, 92vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-xl);
+    animation: modalIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal .body { padding: 20px 24px; }
+  .modal .footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .cfg-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .cfg-row label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .cfg-row input, .cfg-row select, .cfg-row textarea {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    font: inherit;
+    font-size: 13.5px;
+    transition: all 0.15s ease;
+  }
+  .cfg-row input:focus, .cfg-row select:focus, .cfg-row textarea:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .cfg-row textarea { min-height: 90px; resize: vertical; }
+  .cfg-row .hint {
+    grid-column: 2;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .cfg-section { margin-bottom: 22px; }
+  .cfg-section h4 {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 9px 18px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.15s ease;
+    letter-spacing: -0.01em;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 9px 16px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.15s ease;
+  }
+  .btn-ghost:hover {
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 9px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.15s ease;
+  }
+  .btn-danger:hover { filter: brightness(1.1); }
+
+  .cfg-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .cfg-status.ok { color: var(--success); }
+  .cfg-status.err { color: var(--danger); }
+
+  /* ========== Code blocks (in modals) ========== */
+  pre.code {
+    background: var(--bg-base);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    overflow-x: auto;
+    font-size: 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .api-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+  }
+  .api-row code {
+    flex: 1;
+    background: var(--bg-base);
+    border: 1px solid var(--border-default);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    overflow-x: auto;
+    white-space: nowrap;
+    color: var(--accent);
+    font-size: 11.5px;
+  }
+  .copy-btn {
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.15s ease;
+    font-weight: 500;
+  }
+  .copy-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+  }
+
+  /* ========== Tabs ========== */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 18px;
+    background: var(--bg-base);
+    padding: 4px;
+    border-radius: var(--radius-md);
+  }
+  .tab {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s ease;
+    font-weight: 500;
+  }
+  .tab:hover { color: var(--text-primary); }
+  .tab.active {
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ========== Context menu ========== */
+  .ctx-menu {
+    position: fixed;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 6px;
+    z-index: 200;
+    display: none;
+    min-width: 180px;
+    animation: ctxIn 0.15s ease;
+  }
+  @keyframes ctxIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .ctx-menu.open { display: block; }
+  .ctx-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 7px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+    transition: all 0.1s;
+    font-weight: 500;
+  }
+  .ctx-menu button:hover {
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+  }
+  .ctx-menu button.danger { color: var(--danger); }
+  .ctx-menu button.danger:hover { background: var(--danger-soft); }
+
+  /* ========== Login overlay ========== */
+  .login-bg {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-base);
+    background-image:
+      radial-gradient(ellipse 60% 50% at 50% 0%, var(--accent-soft), transparent),
+      radial-gradient(ellipse 80% 50% at 50% 100%, rgba(94, 158, 255, 0.08), transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .login-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-2xl);
+    padding: 36px 32px;
+    width: 400px;
+    box-shadow: var(--shadow-xl);
+    backdrop-filter: blur(12px);
+  }
+  .login-card h1 {
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .login-card .sub {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 24px;
+    font-weight: 500;
+  }
+  .login-card label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .login-card input {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    font: inherit;
+    font-size: 14px;
+    margin-top: 6px;
+    transition: all 0.15s ease;
+  }
+  .login-card input:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .login-card .err {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 10px;
+    background: var(--danger-soft);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--danger-soft);
+    display: none;
+    font-weight: 500;
+  }
+  .login-card .err.show { display: block; }
+  .login-card button {
+    width: 100%;
+    padding: 13px;
+    background: var(--gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 24px;
+    font-size: 14px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.18s ease;
+    letter-spacing: -0.01em;
+  }
+  .login-card button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+  }
+  .login-card .hint {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 18px;
+    font-weight: 500;
+  }
+
+  /* ========== User badge ========== */
+  .user-badge {
+    padding: 10px 12px;
+    background: var(--bg-overlay);
+    border-radius: var(--radius-md);
+    margin: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  .user-badge:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-default);
+  }
+  .user-badge .chevron {
+    color: var(--text-muted);
+    font-size: 11px;
+    transition: transform 0.15s;
+  }
+  .user-badge.open .chevron { transform: rotate(180deg); }
+
+  /* User menu popup — Linear/Slack uslubida */
+  .user-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 12px;
+    right: 12px;
+    margin-bottom: 6px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 6px;
+    box-shadow: var(--shadow-lg);
+    display: none;
+    z-index: 50;
+    animation: menuIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .user-menu.open { display: block; }
+  @keyframes menuIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .user-menu .menu-section {
+    padding: 6px 10px 4px;
+    font-size: 10px;
+    color: var(--text-faded);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .user-menu button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 8px 10px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    transition: all 0.12s ease;
+  }
+  .user-menu button:hover {
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+  }
+  .user-menu button .icon { font-size: 15px; width: 18px; text-align: center; }
+  .user-menu button.danger { color: var(--danger); }
+  .user-menu button.danger:hover { background: var(--danger-soft); }
+  .user-menu .divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 4px 0;
+  }
+  /* Footer ko'rinmaydi endi — hammasi user-menu ichida */
+  aside .footer { display: none; }
+  .user-badge .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    font-size: 13px;
+    box-shadow: var(--shadow-sm);
+  }
+  .user-badge .info { flex: 1; min-width: 0; }
+  .user-badge .name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+  .user-badge .role {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-top: 1px;
+    font-weight: 500;
+  }
+  .user-badge .role.admin { color: var(--warning); }
+  .user-badge .logout {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px;
+    font-size: 14px;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s ease;
+  }
+  .user-badge .logout:hover {
+    color: var(--danger);
+    background: var(--danger-soft);
+  }
+
+  /* ========== Stats ========== */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .stat {
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+  }
+  .stat .label {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .stat .val {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 4px;
+    color: var(--text-primary);
+    letter-spacing: -0.025em;
+  }
+  .stat .sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+  .progress {
+    height: 6px;
+    background: var(--bg-base);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: 8px;
+    border: 1px solid var(--border-subtle);
+  }
+  .progress .bar {
+    height: 100%;
+    background: var(--gradient);
+    transition: width 0.4s ease;
+    border-radius: var(--radius-full);
+  }
+  .progress .bar.warn { background: var(--warning); }
+  .progress .bar.err { background: var(--danger); }
+
+  .model-card {
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 11px 14px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    transition: all 0.15s ease;
+  }
+  .model-card:hover {
+    border-color: var(--border-default);
+    background: var(--bg-hover);
+  }
+  .model-card .name {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  .model-card .size {
+    color: var(--text-muted);
+    font-size: 11.5px;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Login overlay ===== -->
+<div class="login-bg" id="loginOverlay" style="display:none">
+  <div class="login-card">
+    <h1>🏛️ HP-AI</h1>
+    <div class="sub">audit assistant — tizimga kirish</div>
+    <label>Login</label>
+    <input id="li_user" autocomplete="username" placeholder="admin yoki ism" />
+    <label>Parol</label>
+    <input id="li_pass" type="password" autocomplete="current-password" placeholder="••••••••" />
+    <div class="err" id="li_err"></div>
+    <button onclick="doLogin()" id="li_btn">Kirish</button>
+    <div class="hint">Admin akkaunt: admin / admin123 (birinchi marta)</div>
+  </div>
+</div>
+
+<!-- ===== Sidebar ===== -->
+<aside>
+  <div class="brand">
+    <h2>🏛️ HP-AI</h2>
+    <div class="sub">audit assistant</div>
+  </div>
+  <button class="new-chat" onclick="openWsModal()">＋ Yangi chat</button>
+  <div class="ws-list" id="wsList"></div>
+  <div class="user-badge" id="userBadge" style="display:none" onclick="toggleUserMenu(event)">
+    <div class="avatar" id="ub_avatar">?</div>
+    <div class="info">
+      <div class="name" id="ub_name">—</div>
+      <div class="role" id="ub_role">—</div>
+    </div>
+    <span class="chevron">▲</span>
+
+    <!-- Popup menu — Linear/Slack uslubida -->
+    <div class="user-menu" id="userMenu" onclick="event.stopPropagation()">
+      <div class="menu-section">Asosiy</div>
+      <button onclick="closeUserMenu(); openDocs()">
+        <span class="icon">📚</span> Yuklangan fayllar
+      </button>
+      <button onclick="closeUserMenu(); openMonitoring()">
+        <span class="icon">📊</span> Monitoring
+      </button>
+      <button onclick="closeUserMenu(); openConfig()">
+        <span class="icon">⚙️</span> Sozlamalar
+      </button>
+
+      <div class="menu-section" id="adminSection" style="display:none">Admin</div>
+      <button id="kbBtn" style="display:none" onclick="closeUserMenu(); openKb()">
+        <span class="icon">🏛️</span> Asosiy bilim bazasi
+      </button>
+      <button id="ftBtn" style="display:none" onclick="closeUserMenu(); openFineTune()">
+        <span class="icon">🎓</span> Fine-tuning
+      </button>
+      <button id="usersBtn" style="display:none" onclick="closeUserMenu(); openUsers()">
+        <span class="icon">👥</span> Foydalanuvchilar
+      </button>
+      <button id="crossBtn" style="display:none" onclick="closeUserMenu(); openCrossApi()">
+        <span class="icon">🔗</span> Cross-user API
+      </button>
+
+      <div class="divider"></div>
+      <button class="danger" onclick="closeUserMenu(); doLogout()">
+        <span class="icon">🚪</span> Chiqish
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ===== Main ===== -->
+<main>
+  <header class="top">
+    <div class="title">
+      <span class="icon" id="wsIcon">💬</span>
+      <span id="wsTitle">Chat tanlang yoki yarating</span>
+      <button class="icon-btn" onclick="openWsModal(currentWsId)" style="font-size: 11px; padding: 2px 8px;" id="wsEditBtn">✏️</button>
+    </div>
+    <div class="actions">
+      <div class="status" id="status"><span class="dot"></span>Tekshirilmoqda…</div>
+      <button class="icon-btn" onclick="exportChat('pdf')" title="PDF eksport" id="expPdfBtn">📄 PDF</button>
+      <button class="icon-btn" onclick="exportChat('docx')" title="Word eksport" id="expDocxBtn">📝 DOCX</button>
+      <button class="icon-btn" onclick="openApiModal()" title="API endpointlar" id="apiBtn">🔗 API</button>
+    </div>
+  </header>
+
+  <div id="chat"></div>
+
+  <footer class="compose">
+    <div class="pending-files" id="pendingFiles"></div>
+    <div class="input-shell">
+      <input type="file" id="file_picker" accept=".pdf,.docx,.xlsx,.txt,.md,.jpg,.jpeg,.png,.tiff,.bmp" multiple
+             onchange="filesPicked(event)" />
+      <button class="attach-btn" onclick="document.getElementById('file_picker').click()"
+              title="Fayl biriktirish">📎</button>
+      <button class="mic-btn" id="micBtn" onclick="toggleVoice()"
+              title="Ovozli savol (mikrofondan)">🎤</button>
+      <textarea id="q" placeholder="Savolingizni yozing, 📎 fayl biriktiring yoki 🎤 ovoz bilan ayting…
+Enter — yuborish, Shift+Enter — yangi qator"></textarea>
+      <button class="send-btn" id="send" onclick="ask()">Yuborish</button>
+    </div>
+    <div class="quick-btns" id="quickBtns"></div>
+    <div class="hint-row">
+      <span id="modeHint"></span>
+      <span id="apiHint"></span>
+    </div>
+  </footer>
+</main>
+
+<!-- ===== Workspace modal ===== -->
+<div class="modal-bg" id="wsModal">
+  <div class="modal">
+    <header>
+      <h3 id="wsModalTitle">Yangi chat</h3>
+      <button class="icon-btn" onclick="closeWsModal()">✕</button>
+    </header>
+    <div class="body" id="wsModalBody"></div>
+    <div class="footer">
+      <button class="btn-danger" id="wsDeleteBtn" onclick="deleteWs()" style="display:none">🗑 Oʻchirish</button>
+      <div style="display:flex; gap:8px; margin-left:auto; align-items:center;">
+        <span class="cfg-status" id="wsStatus"></span>
+        <button class="btn-ghost" onclick="closeWsModal()">Bekor</button>
+        <button class="btn-primary" onclick="saveWs()">💾 Saqlash</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== API modal ===== -->
+<div class="modal-bg" id="apiModal">
+  <div class="modal">
+    <header>
+      <h3>🔗 API endpointlar</h3>
+      <button class="icon-btn" onclick="closeApiModal()">✕</button>
+    </header>
+    <div class="body" id="apiModalBody"></div>
+  </div>
+</div>
+
+<!-- ===== Config modal ===== -->
+<div class="modal-bg" id="cfgModal">
+  <div class="modal">
+    <header>
+      <h3>⚙️ Sozlamalar</h3>
+      <button class="icon-btn" onclick="closeConfig()">✕</button>
+    </header>
+    <div class="body" id="cfgBody"><div class="cfg-status">Yuklanyapti…</div></div>
+    <div class="footer">
+      <button class="btn-ghost" onclick="resetConfig()">Standartga qaytarish</button>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="cfg-status" id="cfgStatus"></span>
+        <button class="btn-primary" onclick="saveConfig()">💾 Saqlash</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Monitoring modal ===== -->
+<div class="modal-bg" id="monModal">
+  <div class="modal" style="width: min(900px, 95vw)">
+    <header>
+      <h3>📊 Monitoring</h3>
+      <button class="icon-btn" onclick="closeMonitoring()">✕</button>
+    </header>
+    <div class="body" id="monBody">
+      <div class="cfg-status">Yuklanmoqda…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Users modal (admin) ===== -->
+<div class="modal-bg" id="usersModal">
+  <div class="modal" style="width: min(800px, 95vw)">
+    <header>
+      <h3>👥 Foydalanuvchilar</h3>
+      <button class="icon-btn" onclick="closeUsers()">✕</button>
+    </header>
+    <div class="body" id="usersBody"></div>
+    <div class="footer">
+      <button class="btn-ghost" onclick="closeUsers()">Yopish</button>
+      <button class="btn-primary" onclick="openCreateUser()">＋ Yangi foydalanuvchi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Knowledge Base (admin) modal ===== -->
+<div class="modal-bg" id="kbModal">
+  <div class="modal" style="width: min(900px, 95vw)">
+    <header>
+      <h3>🏛️ Asosiy bilim bazasi (Admin)</h3>
+      <button class="icon-btn" onclick="closeKb()">✕</button>
+    </header>
+    <div class="body">
+      <p style="color:var(--muted); font-size:13px; margin-top:0">
+        Bu yerga yuklangan fayllarni <b>barcha auditorlar</b> ko'radi. Ikki turdagi bilim bazasi bor:
+      </p>
+      <div class="tabs">
+        <button class="tab active" onclick="kbTab('laws')" id="kbTabLaws">⚖️ Qonunlar</button>
+        <button class="tab" onclick="kbTab('reports')" id="kbTabReports">📊 Audit hisobotlari</button>
+      </div>
+      <div style="margin: 14px 0; padding: 16px; border: 2px dashed var(--border); border-radius: 10px; text-align: center;">
+        <input type="file" id="kbFilePicker" multiple accept=".pdf,.docx,.xlsx,.txt,.md,.jpg,.jpeg,.png" style="display:none" onchange="kbUpload(event)" />
+        <button class="btn-primary" onclick="document.getElementById('kbFilePicker').click()">＋ Fayl tanlash</button>
+        <div class="hint" style="margin-top:8px; font-size:11px; color:var(--muted)">
+          PDF, DOCX, XLSX, TXT, rasmlar (OCR avtomatik). Bir nechta fayl bir vaqtda.
+        </div>
+      </div>
+      <div id="kbUploadStatus" style="margin-bottom:14px"></div>
+      <div id="kbList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Documents modal ===== -->
+<div class="modal-bg" id="docsModal">
+  <div class="modal" style="width: min(1100px, 95vw)">
+    <header>
+      <h3>📚 Yuklangan fayllar</h3>
+      <button class="icon-btn" onclick="closeDocs()">✕</button>
+    </header>
+    <div class="body">
+      <div id="docsStats" style="margin-bottom:14px"></div>
+      <div style="display:flex; gap:8px; margin-bottom:14px; align-items:center; flex-wrap:wrap;">
+        <input id="docsSearch" placeholder="🔍 Fayl nomi bo'yicha qidirish..."
+               style="flex:1; min-width:200px; padding:8px 10px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;"
+               oninput="searchDocs()" />
+        <select id="docsUserFilter" onchange="loadDocs()"
+                style="padding:8px 10px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;"
+                id="docsUserSel"></select>
+        <button class="icon-btn" onclick="loadDocs()">🔄</button>
+      </div>
+      <div id="docsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Fine-tuning modal ===== -->
+<div class="modal-bg" id="ftModal">
+  <div class="modal" style="width: min(1000px, 95vw)">
+    <header>
+      <h3>🎓 Fine-tuning (model o'qitish)</h3>
+      <button class="icon-btn" onclick="closeFineTune()">✕</button>
+    </header>
+    <div class="body">
+      <div class="tabs">
+        <button class="tab active" onclick="ftTab('datasets')" id="ftTabDs">📚 Datasetlar</button>
+        <button class="tab" onclick="ftTab('items')" id="ftTabItems" style="display:none">📝 Misollar</button>
+        <button class="tab" onclick="ftTab('jobs')" id="ftTabJobs">🚂 Training jobs</button>
+        <button class="tab" onclick="ftTab('help')" id="ftTabHelp">📖 Yordam</button>
+      </div>
+      <div id="ftContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Cross-user API modal ===== -->
+<div class="modal-bg" id="crossModal">
+  <div class="modal">
+    <header>
+      <h3>🔗 Cross-user API (barchasidan qidirish)</h3>
+      <button class="icon-btn" onclick="closeCrossApi()">✕</button>
+    </header>
+    <div class="body" id="crossBody"></div>
+  </div>
+</div>
+
+<!-- Context menu -->
+<div class="ctx-menu" id="ctxMenu">
+  <button onclick="ctxAction('edit')">✏️ Tahrirlash</button>
+  <button onclick="ctxAction('api')">🔗 API koʻrsatish</button>
+  <button onclick="ctxAction('clear')">🧹 Tarixni tozalash</button>
+  <button class="danger" onclick="ctxAction('delete')">🗑 Oʻchirish</button>
+</div>
+
+<script>
+// ========================= KIRISH =========================
+const API = location.origin.replace(/:\d+$/, ':8000') || 'http://localhost:8000';
+
+let workspacesData = [];
+let currentWsId = null;
+let currentWs = null;
+let chatHistory = {};
+let pendingFiles = [];
+let loadingMessages = false;
+
+// Auth state
+let authToken = localStorage.getItem('hp_token') || null;
+let currentUser = null;
+
+try {
+  currentWsId = localStorage.getItem('currentWsId') || null;
+} catch {}
+
+// ====== AUTH ======
+function setAuth(token, user) {
+  authToken = token;
+  currentUser = user;
+  if (token) localStorage.setItem('hp_token', token);
+  else localStorage.removeItem('hp_token');
+  renderUserBadge();
+}
+
+function renderUserBadge() {
+  if (currentUser) {
+    $('userBadge').style.display = 'flex';
+    $('ub_name').textContent = currentUser.full_name || currentUser.username;
+    $('ub_role').textContent = (currentUser.sector || '') +
+      (currentUser.role === 'admin' ? ' • Administrator' : '');
+    $('ub_role').className = 'role' + (currentUser.role === 'admin' ? ' admin' : '');
+    $('ub_avatar').textContent = (currentUser.full_name || currentUser.username || '?')[0].toUpperCase();
+    // Admin tugmalarini koʻrsatish (popup menyu ichida)
+    const isAdmin = currentUser.role === 'admin';
+    $('adminSection').style.display = isAdmin ? 'block' : 'none';
+    $('usersBtn').style.display = isAdmin ? 'flex' : 'none';
+    $('crossBtn').style.display = isAdmin ? 'flex' : 'none';
+    $('ftBtn').style.display = isAdmin ? 'flex' : 'none';
+    $('kbBtn').style.display = isAdmin ? 'flex' : 'none';
+  } else {
+    $('userBadge').style.display = 'none';
+  }
+}
+
+// User menu (popup) — user badge bosilganda ochiladi
+function toggleUserMenu(e) {
+  if (e) e.stopPropagation();
+  const badge = $('userBadge');
+  const menu = $('userMenu');
+  const isOpen = menu.classList.contains('open');
+  if (isOpen) {
+    closeUserMenu();
+  } else {
+    menu.classList.add('open');
+    badge.classList.add('open');
+  }
+}
+function closeUserMenu() {
+  $('userMenu').classList.remove('open');
+  $('userBadge').classList.remove('open');
+}
+// Tashqariga bosilganda yopiladi
+document.addEventListener('click', (e) => {
+  if (!$('userBadge').contains(e.target)) closeUserMenu();
+});
+
+// fetch wrapper — har queryga Auth header qo'shadi
+async function apiFetch(url, opts = {}) {
+  const headers = Object.assign({}, opts.headers || {});
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  const r = await fetch(url, Object.assign({}, opts, { headers }));
+  if (r.status === 401) {
+    setAuth(null, null);
+    showLogin();
+    throw new Error('Token muddati tugadi — qaytadan kiring');
+  }
+  return r;
+}
+
+function showLogin() {
+  $('loginOverlay').style.display = 'flex';
+  $('li_user').focus();
+}
+function hideLogin() {
+  $('loginOverlay').style.display = 'none';
+  $('li_err').classList.remove('show');
+  $('li_user').value = '';
+  $('li_pass').value = '';
+}
+
+async function doLogin() {
+  const username = $('li_user').value.trim();
+  const password = $('li_pass').value;
+  if (!username || !password) return;
+  $('li_btn').disabled = true;
+  $('li_btn').textContent = '⏳ Kirilmoqda…';
+  try {
+    const r = await fetch(`${API}/api/auth/login`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username, password})
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail || 'Login xato');
+    setAuth(j.token, j.user);
+    hideLogin();
+    await loadWorkspaces();
+  } catch (e) {
+    $('li_err').textContent = e.message;
+    $('li_err').classList.add('show');
+  } finally {
+    $('li_btn').disabled = false;
+    $('li_btn').textContent = 'Kirish';
+  }
+}
+
+async function doLogout() {
+  if (!confirm('Tizimdan chiqasizmi?')) return;
+  setAuth(null, null);
+  chatHistory = {};
+  workspacesData = [];
+  currentWs = null;
+  $('chat').innerHTML = '';
+  $('wsList').innerHTML = '';
+  showLogin();
+}
+
+async function checkAuth() {
+  if (!authToken) { showLogin(); return false; }
+  try {
+    const r = await apiFetch(`${API}/api/auth/me`);
+    if (!r.ok) throw new Error();
+    currentUser = await r.json();
+    renderUserBadge();
+    return true;
+  } catch {
+    setAuth(null, null);
+    showLogin();
+    return false;
+  }
+}
+
+// Login formdagi Enter
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && $('loginOverlay').style.display === 'flex') {
+    doLogin();
+  }
+});
+
+// ========================= UTIL =========================
+function $(id) { return document.getElementById(id); }
+function copy(text) { navigator.clipboard.writeText(text); }
+
+// Backend'dan chat tarixini olish
+async function loadMessages(wid) {
+  if (!wid) return [];
+  try {
+    const r = await apiFetch(`${API}/api/workspaces/${wid}/messages`);
+    const j = await r.json();
+    return j.items || [];
+  } catch (e) {
+    console.error('Xabarlarni olishda xato:', e);
+    return [];
+  }
+}
+
+// Markdown ni xavfsiz HTMLga aylantirish
+if (typeof marked !== 'undefined') {
+  marked.setOptions({ breaks: true, gfm: true });
+}
+
+// Citation marker'larni javobdan olib tashlash
+// [1], [2,3], [1][2], (manba [1]), (manba: 1) kabi formatlarni tozalaydi
+function stripCitations(text) {
+  if (!text) return text;
+  return text
+    // [N] yoki [N, M] yoki [N][M]
+    .replace(/\s*\[\d+(?:\s*[,;-]\s*\d+)*\]/g, '')
+    // (manba [N]), (manba: N), (manba N)
+    .replace(/\s*\(\s*(?:манба|manba|source)[:\s]*\d+(?:\s*[,;]\s*\d+)*\s*\)/gi, '')
+    // "Manbalar:" yoki "Manba:" satrini olib tashlash (yakuniy qatorlardan)
+    .replace(/(?:^|\n)\s*\**\s*(?:manbalar?|sources?|манба(?:лар)?)\s*\**\s*[:\.]?\s*[^\n]*$/gim, '')
+    // | Manba | ustunini jadvallardan olib tashlash murakkab — qoldiramiz
+    // Ortib qolgan koʻp boʻsh qatorlar
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function renderMd(text) {
+  if (typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
+    return null;
+  }
+  try {
+    const cleaned = stripCitations(text);
+    const raw = marked.parse(cleaned || '');
+    return DOMPurify.sanitize(raw);
+  } catch {
+    return null;
+  }
+}
+
+// Bot xabar matnini chiqarish — markdown bo'lsa render qiladi, aks holda plain
+function setBotText(container, text, asMarkdown = true) {
+  if (asMarkdown) {
+    const html = renderMd(text);
+    if (html != null) {
+      container.classList.add('md');
+      container.innerHTML = html;
+      return;
+    }
+  }
+  container.classList.remove('md');
+  container.textContent = text;
+}
+
+function fmtElapsed(ms) {
+  if (ms < 1000) return `${ms} ms`;
+  const sec = ms / 1000;
+  if (sec < 60) return `${sec.toFixed(1)} s`;
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec - m * 60);
+  return `${m}m ${s}s`;
+}
+
+// Backend uchun tarixni tayyorlash (oxirgi N juftlik)
+function buildHistory(maxTurns = 6) {
+  const hist = chatHistory[currentWsId] || [];
+  // attach xabarlarni o'tkazib yuboramiz, oxiridan boshlab user+bot juftliklarini olamiz
+  const turns = [];
+  for (let i = hist.length - 1; i >= 0; i--) {
+    const m = hist[i];
+    if (m.role === 'attach') continue;
+    if (m.role === 'user' || m.role === 'bot') {
+      turns.unshift({ role: m.role, text: m.text || '' });
+      if (turns.length >= maxTurns * 2) break;
+    }
+  }
+  return turns;
+}
+
+function renderMsg(msg) {
+  const chat = $('chat');
+  const div = document.createElement('div');
+
+  if (msg.role === 'user') {
+    div.className = 'msg user';
+    div.textContent = msg.text;
+  } else if (msg.role === 'attach') {
+    div.className = 'msg attach';
+    // Backend sources'da fayl metadata bo'lsa — chiroyli preview
+    const meta = (msg.sources && msg.sources[0]) || null;
+    if (meta && meta.doc_id) {
+      const isImg = (meta.mime || '').startsWith('image/');
+      const downloadUrl = `${API}/api/all_documents/${meta.doc_id}/download?token=${encodeURIComponent(authToken || '')}`;
+      const fname = meta.filename || msg.text;
+      const sizeStr = meta.size_bytes ? fmtSize(meta.size_bytes) : '';
+      const chunksStr = meta.chunks ? `${meta.chunks} chunk` : '';
+      const icon = isImg ? '🖼️' :
+                   (fname.endsWith('.pdf') ? '📕' :
+                   (fname.endsWith('.docx') ? '📘' :
+                   (fname.endsWith('.xlsx') ? '📗' : '📄')));
+      div.innerHTML = `
+        <a class="file-link" href="${downloadUrl}" target="_blank" download="${escapeHtml(fname)}">
+          <div class="file-icon">${icon}</div>
+          <div class="file-info">
+            <div class="file-name">${escapeHtml(fname)}</div>
+            <div class="file-meta">${[sizeStr, chunksStr].filter(Boolean).join(' • ')}</div>
+          </div>
+        </a>
+      `;
+      if (isImg) {
+        const img = document.createElement('img');
+        img.className = 'file-preview';
+        img.src = downloadUrl;
+        img.onclick = () => window.open(downloadUrl, '_blank');
+        img.onerror = () => { img.style.display = 'none'; };
+        div.appendChild(img);
+      }
+    } else {
+      div.textContent = `📎 ${msg.text}`;
+    }
+  } else {
+    div.className = 'msg bot';
+    if (msg.mode) {
+      const badge = document.createElement('span');
+      badge.className = 'mode-badge mode-' + msg.mode;
+      badge.textContent = msg.mode === 'rag' ? 'Hujjat asosida' :
+                          msg.mode === 'llm_only' ? 'Erkin javob' : 'Topilmadi';
+      div.appendChild(badge);
+      div.appendChild(document.createElement('br'));
+    }
+    const body = document.createElement('div');
+    body.dataset.role = 'body';
+    setBotText(body, msg.text || '', true);
+    div.appendChild(body);
+    // Manbalar bloki olib tashlangan (faqat vaqt koʻrsatiladi)
+    if (msg.elapsed_ms != null || msg.from_cache) {
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      if (msg.elapsed_ms != null) {
+        meta.innerHTML += `<span class="item">⏱️ ${fmtElapsed(msg.elapsed_ms)}</span>`;
+      }
+      if (msg.from_cache) {
+        meta.innerHTML += `<span class="item">⚡ Keshdan</span>`;
+      }
+      if (msg.tokens_per_sec) {
+        meta.innerHTML += `<span class="item">📊 ${msg.tokens_per_sec.toFixed(1)} tok/s</span>`;
+      }
+      div.appendChild(meta);
+    }
+  }
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+function renderChat() {
+  $('chat').innerHTML = '';
+  const hist = chatHistory[currentWsId] || [];
+  if (!hist.length && currentWs) {
+    const welcome = {
+      role: 'bot',
+      text: `Salom! Siz "${currentWs.name}" chatidasiz.\n` +
+            (currentWs.scope?.length ? `Qidiruv: ${currentWs.scope.join(', ')}\n` : '') +
+            (currentWs.system_prompt ? `Maxsus rol: ${currentWs.system_prompt}` :
+             'Savolingizni yozing yoki 📎 orqali fayl yuklang.'),
+    };
+    renderMsg(welcome);
+    return;
+  }
+  hist.forEach(renderMsg);
+}
+
+// ========================= WORKSPACES =========================
+// Workspace doc_ids ni tozalash (eski fayllarni unutish)
+async function clearWsDocs() {
+  if (!currentWsId) return;
+  if (!confirm('Bu chatdagi barcha biriktirilgan fayllar (oxirgisigacha) unutilsinmi?\n' +
+               'Vektor bazadagi ma\'lumot saqlanadi, faqat shu chatdan ajratiladi.')) return;
+  try {
+    await apiFetch(`${API}/api/workspaces/${currentWsId}/clear_docs`, {method: 'POST'});
+    await loadWorkspaces();
+  } catch (e) { alert('Xato: ' + e.message); }
+}
+
+async function createDefaultWorkspace() {
+  try {
+    await apiFetch(`${API}/api/workspaces`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        name: 'Mening chatim',
+        icon: '💬',
+        scope: ['uploads'],
+        system_prompt: '',
+        allow_fallback: true,
+      })
+    });
+    await loadWorkspaces();
+  } catch (e) {
+    console.error('Default workspace yaratish xatosi:', e);
+  }
+}
+
+async function loadWorkspaces() {
+  try {
+    const r = await apiFetch(`${API}/api/workspaces`);
+    const j = await r.json();
+    workspacesData = j.items || [];
+    renderWsList();
+    if (!currentWsId || !workspacesData.find(w => w.id === currentWsId)) {
+      if (workspacesData.length) await selectWs(workspacesData[0].id);
+      else {
+        // Birinchi marta — workspace yo'q. Default yaratamiz.
+        await createDefaultWorkspace();
+      }
+    } else {
+      await selectWs(currentWsId);
+    }
+  } catch (e) {
+    $('wsList').innerHTML = `<div style="padding:12px; color:var(--err)">Xato: ${e.message}</div>`;
+  }
+}
+
+function renderWsList() {
+  const list = $('wsList');
+  list.innerHTML = '';
+
+  // Shared (admin yaratgan) va shaxsiy chatlarni alohida koʻrsatamiz
+  const shared = workspacesData.filter(w => w.is_shared);
+  const personal = workspacesData.filter(w => !w.is_shared);
+
+  const buildItem = (ws, isShared) => {
+    const div = document.createElement('div');
+    div.className = 'ws-item' + (ws.id === currentWsId ? ' active' : '');
+    div.onclick = () => selectWs(ws.id);
+    div.oncontextmenu = (e) => { e.preventDefault(); openCtx(e, ws.id); };
+    const sharedBadge = isShared
+      ? '<span title="Asosiy chat — hammaga ochiq" style="font-size:9px; background:rgba(34,211,238,.15); color:var(--accent-2); padding:1px 5px; border-radius:3px; margin-left:4px">🌐</span>'
+      : '';
+    div.innerHTML = `
+      <span class="icon">${ws.icon || '💬'}</span>
+      <span class="name">${ws.name}${sharedBadge}</span>
+      <button class="menu" onclick="event.stopPropagation(); openCtx(event, '${ws.id}')">⋯</button>
+    `;
+    list.appendChild(div);
+  };
+
+  if (shared.length) {
+    const h = document.createElement('div');
+    h.style.cssText = 'padding: 8px 14px 4px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em;';
+    h.textContent = '🌐 Asosiy chatlar';
+    list.appendChild(h);
+    shared.forEach(ws => buildItem(ws, true));
+  }
+  if (personal.length) {
+    const h = document.createElement('div');
+    h.style.cssText = 'padding: 12px 14px 4px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em;';
+    h.textContent = '👤 Mening chatlarim';
+    list.appendChild(h);
+    personal.forEach(ws => buildItem(ws, false));
+  }
+}
+
+async function selectWs(wid) {
+  currentWsId = wid;
+  currentWs = workspacesData.find(w => w.id === wid);
+  if (!currentWs) return;
+  localStorage.setItem('currentWsId', wid);
+  $('wsIcon').textContent = currentWs.icon || '💬';
+  $('wsTitle').textContent = currentWs.name;
+  $('apiHint').textContent = `API: /api/workspaces/${wid}/ask`;
+
+  // Hujjatlar haqida hint
+  const docs = currentWs.doc_ids || [];
+  const lastName = currentWs.last_doc_name;
+  let docHint = '';
+  if (docs.length === 1) {
+    docHint = ` • 📄 1 fayl${lastName ? ': ' + lastName : ''}`;
+  } else if (docs.length > 1) {
+    docHint = ` • 📄 ${docs.length} fayl` +
+      (lastName ? ` (oxirgi: ${lastName})` : '') +
+      ' <button onclick="clearWsDocs()" class="copy-btn" style="margin-left:8px; font-size:10px">🧹 Tozalash</button>';
+  }
+  $('modeHint').innerHTML = (currentWs.allow_fallback
+    ? '💬 Hujjatda topilmasa erkin javob beradi'
+    : '📚 Faqat hujjatlardagi maʼlumotni qaytaradi') + docHint;
+  renderQuickBtns();
+  renderWsList();
+
+  // DB'dan xabarlarni yuklash (har safar tanlanganda)
+  loadingMessages = true;
+  $('chat').innerHTML = '<div style="color:var(--muted); text-align:center; padding:40px;">⏳ Tarix yuklanmoqda…</div>';
+  const items = await loadMessages(wid);
+  chatHistory[wid] = items;
+  loadingMessages = false;
+  renderChat();
+}
+
+function renderQuickBtns() {
+  const btns = $('quickBtns');
+  if (!currentWs) { btns.innerHTML = ''; return; }
+  const presets = [];
+  if (currentWs.scope?.includes('uploads')) {
+    presets.push('Shartnoma summasi qancha?');
+    presets.push('Bajarilish muddati?');
+    presets.push('Kamchiliklarni topib ber');
+  } else if (currentWs.scope?.includes('laws')) {
+    presets.push('Davlat xaridlari tartibi qanday?');
+    presets.push('Tender summasi nima asosida belgilanadi?');
+  } else if (currentWs.scope?.includes('reports')) {
+    presets.push('Eng koʻp uchragan kamchiliklar?');
+    presets.push('2024-yilda qanday risklar aniqlangan?');
+  }
+  btns.innerHTML = presets.map(p =>
+    `<button onclick="quick('${p.replace(/'/g, "\\'")}')">${p}</button>`
+  ).join('');
+}
+
+// ========================= ASK =========================
+async function ask() {
+  // Mikrofonni avtomatik to'xtatish — savol yuborilganda recording davom etmasin
+  if (isRecording) stopVoice();
+  voiceTextBefore = '';
+
+  const q = $('q').value.trim();
+  if (!q && pendingFiles.length === 0) return;
+  if (!currentWs) { alert('Avval chat tanlang'); return; }
+
+  // Avval pending fayllarni yuklash — yuklangan doc_id larni yig'amiz
+  let justUploadedDocIds = [];
+  if (pendingFiles.length) {
+    for (const f of pendingFiles.slice()) {
+      const result = await uploadFile(f);
+      if (result && result.doc_id) justUploadedDocIds.push(result.doc_id);
+    }
+    pendingFiles = [];
+    renderPendingFiles();
+  }
+  if (!q) return;
+
+  // User xabarni UI'ga koʻrsatish (backend uni DB'ga oʻzi yozadi)
+  const userMsg = { role: 'user', text: q };
+  (chatHistory[currentWsId] ||= []).push(userMsg);
+  renderMsg(userMsg);
+  $('q').value = '';
+  $('send').disabled = true;
+
+  // Bot xabar uchun joy (text keyin to'ldiriladi)
+  const botMsg = { role: 'bot', text: '', mode: null, sources: [] };
+  chatHistory[currentWsId].push(botMsg);
+  const botDiv = renderMsg(botMsg);
+  botDiv.innerHTML = '';
+  botDiv.classList.add('streaming');
+
+  // Live timer — har 100ms da yangilanadi
+  const timerEl = document.createElement('div');
+  timerEl.className = 'live-timer';
+  timerEl.innerHTML = '<span class="spinner"></span><span class="timer-text">0.0s</span>';
+  botDiv.appendChild(timerEl);
+
+  const bodyEl = document.createElement('div');
+  bodyEl.dataset.role = 'body';
+  botDiv.appendChild(bodyEl);
+
+  const t0 = performance.now();
+  let firstTokenAt = null, tokenCount = 0;
+  let timerHandle = setInterval(() => {
+    const sec = (performance.now() - t0) / 1000;
+    const txt = timerEl.querySelector('.timer-text');
+    if (txt) txt.textContent = sec.toFixed(1) + 's';
+  }, 100);
+
+  try {
+    // Tarix backend tomonda DB'dan olinadi.
+    // Agar shu xabar bilan birga fayl yuklangan bo'lsa — backend filter qiladi
+    const reqBody = { question: q };
+    if (justUploadedDocIds.length) {
+      reqBody.active_doc_ids = justUploadedDocIds;
+    }
+    const resp = await apiFetch(`${API}/api/workspaces/${currentWsId}/ask/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reqBody)
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '', text = '', sources = [], mode = null;
+    // ❌ MUHIM: botDiv.textContent = '' QILMAYMIZ — bu timerEl va bodyEl'ni DOM dan o'chirib yuboradi!
+
+    // SSE event'larini process qiluvchi yordamchi
+    const dbg = (...args) => console.log('[STREAM]', ...args);
+    let eventCount = 0;
+    const handleEvent = (obj) => {
+      eventCount++;
+      if (obj.type === 'mode') {
+        mode = obj.mode;
+        dbg('mode =', mode);
+      } else if (obj.type === 'sources') {
+        sources = obj.sources;
+      } else if (obj.type === 'token') {
+        if (firstTokenAt == null) firstTokenAt = performance.now();
+        tokenCount++;
+        text += obj.text;
+        if (bodyEl) {
+          bodyEl.textContent = text;
+        } else {
+          dbg('XATO: bodyEl null!');
+        }
+        $('chat').scrollTop = $('chat').scrollHeight;
+      } else if (obj.type === 'saved') {
+        botMsg.id = obj.message_id;
+        botMsg.elapsed_ms = obj.elapsed_ms;
+        botMsg.tokens_per_sec = obj.tokens_per_sec;
+        dbg('saved! final_text.length =', (obj.final_text || '').length, ', text.length =', text.length);
+        if (obj.final_text && obj.final_text.length > text.length) {
+          text = obj.final_text;
+          if (bodyEl) bodyEl.textContent = text;
+        }
+      } else if (obj.type === 'done') {
+        dbg('done. tokenCount =', tokenCount, ', text.length =', text.length);
+      } else if (obj.type === 'error') {
+        throw new Error(obj.message);
+      }
+    };
+
+    while (true) {
+      const { value, done } = await reader.read();
+      // Stream tugadi — qolgan buf'ni ham process qilamiz
+      if (done) {
+        if (buf.trim()) {
+          const lines = buf.split('\n\n').concat(buf.endsWith('\n\n') ? [] : []);
+          for (const line of lines) {
+            const m = line.match(/^data:\s*(.+)$/m);
+            if (!m) continue;
+            try { handleEvent(JSON.parse(m[1])); } catch {}
+          }
+        }
+        break;
+      }
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        const m = line.match(/^data:\s*(.+)$/m);
+        if (!m) continue;
+        try { handleEvent(JSON.parse(m[1])); } catch (err) {
+          if (err.message) throw err;  // error event
+        }
+      }
+    }
+    // Stream tugadi — timer'ni to'xtatish
+    clearInterval(timerHandle);
+    timerEl.remove();
+    botDiv.classList.remove('streaming');
+    let finalText = (text || '').trim();
+
+    // KAFOLATLANGAN: har holatda DB'dan oxirgi javobni tekshiramiz.
+    // Stream to'liq kelgan bo'lsa ham, DB versiya kuchliroq bo'ladi
+    // (gpt-oss thinking bug holatlarini ham qamrab oladi).
+    console.log('Stream tugadi. text =', text.length, 'belgi');
+    try {
+      // Kichik kutish — DB commit yakunlanishi uchun
+      await new Promise(r => setTimeout(r, 200));
+      const r = await apiFetch(`${API}/api/workspaces/${currentWsId}/messages?limit=500`);
+      const j = await r.json();
+      const items = j.items || [];
+      // Oxiridan boshlab birinchi bot xabarni topish
+      for (let i = items.length - 1; i >= 0; i--) {
+        if (items[i].role === 'bot' && (items[i].text || '').trim()) {
+          const dbText = items[i].text.trim();
+          // DB versiya stream versiyadan uzun bo'lsa, DB ni ishlatamiz
+          if (dbText.length > finalText.length) {
+            finalText = dbText;
+            botMsg.id = items[i].id;
+            if (items[i].elapsed_ms) botMsg.elapsed_ms = items[i].elapsed_ms;
+            if (items[i].tokens_per_sec) botMsg.tokens_per_sec = items[i].tokens_per_sec;
+            console.log('✓ DB versiya ishlatildi:', finalText.length, 'belgi');
+          }
+          break;
+        }
+      }
+    } catch (e) { console.warn('DB fetch xato:', e); }
+
+    // DIAGNOSTIKA
+    console.log('[STREAM] Yakuniy rendering. finalText.length =', finalText.length,
+                ', bodyEl bormi =', !!bodyEl,
+                ', DOM ichida =', bodyEl ? document.contains(bodyEl) : false);
+
+    if (bodyEl && finalText) {
+      // Avval TEXT sifatida joylashtirib qoʻyamiz — kafolat
+      bodyEl.textContent = finalText;
+      // Keyin markdown render qilishga harakat (tableslarni chiroyli ko'rsatish uchun)
+      try {
+        const html = renderMd(finalText);
+        if (html && html.trim() && html.replace(/<[^>]+>/g, '').trim().length > 0) {
+          bodyEl.classList.add('md');
+          bodyEl.innerHTML = html;
+        } else {
+          console.warn('[STREAM] Markdown render bo\'sh natija qaytardi, textContent qoldirildi');
+        }
+      } catch (e) {
+        console.warn('[STREAM] Markdown render xato:', e);
+      }
+    } else if (bodyEl) {
+      bodyEl.innerHTML = '<div style="color:var(--warn); font-style:italic">⚠️ Modeldan bo\'sh javob keldi. Savolni boshqacharoq aytib koʻring yoki ⚙️ Sozlamalarda Max tokens ni oshiring.</div>';
+    }
+    text = finalText;
+
+    // Manbalar bloki olib tashlandi — foydalanuvchi xohishiga ko'ra
+
+    // Vaqt va metrika
+    const elapsed = Math.round(performance.now() - t0);
+    const genTime = firstTokenAt ? (performance.now() - firstTokenAt) / 1000 : 0;
+    const tps = genTime > 0 ? tokenCount / genTime : 0;
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.innerHTML = `
+      <span class="item">⏱️ ${fmtElapsed(elapsed)}</span>
+      ${firstTokenAt ? `<span class="item">🚀 ${fmtElapsed(Math.round(firstTokenAt - t0))} (1-token)</span>` : ''}
+      ${tps > 0 ? `<span class="item">📊 ${tps.toFixed(1)} tok/s</span>` : ''}
+    `;
+    botDiv.appendChild(meta);
+
+    // In-memory cache yangilash (DB'ga backend yozdi)
+    botMsg.text = text;
+    botMsg.mode = mode;
+    botMsg.sources = sources;
+    if (botMsg.elapsed_ms == null) botMsg.elapsed_ms = elapsed;
+    if (botMsg.tokens_per_sec == null) botMsg.tokens_per_sec = tps > 0 ? tps : null;
+  } catch (e) {
+    clearInterval(timerHandle);
+    botDiv.classList.remove('streaming');
+    botDiv.innerHTML = '';
+    botDiv.style.color = 'var(--err)';
+    botDiv.textContent = 'Xato: ' + e.message;
+    botMsg.text = 'Xato: ' + e.message;
+  } finally {
+    $('send').disabled = false;
+  }
+}
+
+function quick(text) { $('q').value = text; ask(); }
+
+$('q').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); }
+});
+
+// ========================= FILE UPLOAD =========================
+function filesPicked(e) {
+  for (const f of e.target.files) pendingFiles.push(f);
+  e.target.value = '';
+  renderPendingFiles();
+}
+
+function renderPendingFiles() {
+  const pf = $('pendingFiles');
+  pf.innerHTML = '';
+  pendingFiles.forEach((f, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = `📎 ${f.name}`;
+    const b = document.createElement('button');
+    b.textContent = '✕';
+    b.onclick = () => { pendingFiles.splice(i, 1); renderPendingFiles(); };
+    chip.appendChild(b);
+    pf.appendChild(chip);
+  });
+}
+
+async function uploadFile(file) {
+  if (!currentWsId) return null;
+  const fd = new FormData();
+  fd.append('file', file);
+  const tempMsg = { role: 'attach', text: `${file.name} yuklanmoqda…` };
+  (chatHistory[currentWsId] ||= []).push(tempMsg);
+  const div = renderMsg(tempMsg);
+  try {
+    const r = await apiFetch(`${API}/api/workspaces/${currentWsId}/upload`, {
+      method: 'POST', body: fd
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail || 'upload failed');
+    tempMsg.text = `${j.filename} indekslandi (${j.chunks} chunk)`;
+    // Metadata qo'shamiz — chat preview uchun
+    tempMsg.sources = [{
+      doc_id: j.doc_id,
+      filename: j.filename,
+      size_bytes: j.size_bytes || file.size,
+      chunks: j.chunks,
+      mime: file.type,
+    }];
+    // Vaqtinchalik div'ni yangi preview bilan almashtirish
+    const newDiv = renderMsg({ ...tempMsg });
+    div.replaceWith(newDiv);
+    await apiFetch(`${API}/api/workspaces`).then(r => r.json()).then(d => {
+      workspacesData = d.items || [];
+      currentWs = workspacesData.find(w => w.id === currentWsId);
+    });
+    return j;  // doc_id qaytariladi
+  } catch (e) {
+    tempMsg.text = `Yuklash xatosi: ${e.message}`;
+    div.textContent = `❌ ${tempMsg.text}`;
+    div.style.color = 'var(--err)';
+    return null;
+  }
+}
+
+// Drag-and-drop
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  for (const f of e.dataTransfer.files) pendingFiles.push(f);
+  renderPendingFiles();
+});
+
+// Clipboard paste — rasm yoki fayl yopishtirish
+function handlePaste(e) {
+  const cd = e.clipboardData || window.clipboardData;
+  if (!cd) return;
+
+  const items = Array.from(cd.items || []);
+  const filesFromItems = items
+    .filter(it => it.kind === 'file')
+    .map(it => it.getAsFile())
+    .filter(Boolean);
+
+  // Yana cd.files (ba'zi brauzerlarda)
+  const filesArr = Array.from(cd.files || []);
+  const allFiles = [...filesFromItems, ...filesArr.filter(f => !filesFromItems.some(g => g.name === f.name))];
+
+  if (allFiles.length === 0) return;  // oddiy matn — qo'shilavermidi
+
+  e.preventDefault();
+  for (const f of allFiles) {
+    // Clipboard rasm odatda 'image.png' nomi bilan keladi — vaqt qo'shamiz
+    let file = f;
+    if (f.type.startsWith('image/') && (!f.name || f.name === 'image.png')) {
+      const ext = f.type.split('/')[1] || 'png';
+      file = new File([f], `clipboard_${Date.now()}.${ext}`, {type: f.type});
+    }
+    pendingFiles.push(file);
+  }
+  renderPendingFiles();
+  // UI feedback
+  const ta = $('q');
+  const placeholder = ta.placeholder;
+  ta.placeholder = `📋 ${allFiles.length} ta fayl yopishtirildi — savol yozing va Yuborish`;
+  setTimeout(() => { ta.placeholder = placeholder; }, 3000);
+}
+
+// Paste — faqat hujjat darajasida tinglaymiz (ikki marta ishga tushmasligi uchun)
+document.addEventListener('paste', e => {
+  // Modal ochiq bo'lsa — paste shu modal uchun
+  const anyModalOpen = document.querySelector('.modal-bg.open');
+  const loginVisible = $('loginOverlay').style.display === 'flex';
+  if (anyModalOpen || loginVisible) return;
+  // Agar fokus boshqa input/textarea'da (q dan tashqari) — qaytarmaymiz
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') && t.id !== 'q') return;
+  handlePaste(e);
+});
+
+// ========================= WS MODAL =========================
+let editingWsId = null;
+function openWsModal(wid) {
+  editingWsId = wid || null;
+  const ws = wid ? workspacesData.find(w => w.id === wid) : null;
+  $('wsModalTitle').textContent = ws ? 'Chat sozlamalari' : 'Yangi chat';
+  $('wsDeleteBtn').style.display = ws ? 'block' : 'none';
+  $('wsModalBody').innerHTML = `
+    <div class="cfg-row">
+      <label>Nomi</label>
+      <input id="ws_name" value="${ws?.name || ''}" placeholder="Masalan: Davlat xaridlari" />
+    </div>
+    <div class="cfg-row">
+      <label>Icon (emoji)</label>
+      <input id="ws_icon" value="${ws?.icon || '💬'}" maxlength="2" />
+    </div>
+    <div class="cfg-row">
+      <label>Qidiruv doirasi</label>
+      <div>
+        <label><input type="checkbox" id="sc_laws" ${(ws?.scope || ['laws','reports']).includes('laws')?'checked':''}/> Qonunlar</label>
+        <label style="margin-left:14px"><input type="checkbox" id="sc_reports" ${(ws?.scope || ['laws','reports']).includes('reports')?'checked':''}/> Audit hisobotlari</label>
+        <label style="margin-left:14px"><input type="checkbox" id="sc_uploads" ${(ws?.scope || []).includes('uploads')?'checked':''}/> Yuklangan fayllar</label>
+      </div>
+    </div>
+    <div class="cfg-row">
+      <label>Maxsus rol (system prompt)</label>
+      <textarea id="ws_prompt" placeholder="Masalan: Faqat moliyaviy auditga oid javob bering...">${ws?.system_prompt || ''}</textarea>
+    </div>
+    <div class="cfg-row">
+      <label>Erkin javob</label>
+      <div>
+        <label><input type="checkbox" id="ws_fallback" ${ws?.allow_fallback !== false ?'checked':''}/> Hujjatda topilmasa, LLM o'zi javob bersin</label>
+      </div>
+    </div>
+  `;
+  $('wsModal').classList.add('open');
+}
+function closeWsModal() {
+  $('wsModal').classList.remove('open');
+  $('wsStatus').textContent = '';
+}
+async function saveWs() {
+  const scope = [];
+  if ($('sc_laws').checked) scope.push('laws');
+  if ($('sc_reports').checked) scope.push('reports');
+  if ($('sc_uploads').checked) scope.push('uploads');
+  const body = {
+    name: $('ws_name').value.trim() || 'Yangi chat',
+    icon: $('ws_icon').value.trim() || '💬',
+    scope,
+    system_prompt: $('ws_prompt').value.trim(),
+    allow_fallback: $('ws_fallback').checked,
+  };
+  $('wsStatus').textContent = 'Saqlanyapti…';
+  try {
+    let r;
+    if (editingWsId) {
+      r = await apiFetch(`${API}/api/workspaces/${editingWsId}`, {
+        method: 'PATCH', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+      });
+    } else {
+      r = await apiFetch(`${API}/api/workspaces`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+      });
+    }
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail || 'xato');
+    await loadWorkspaces();
+    if (!editingWsId) selectWs(j.id);
+    closeWsModal();
+  } catch (e) {
+    $('wsStatus').className = 'cfg-status err';
+    $('wsStatus').textContent = 'Xato: ' + e.message;
+  }
+}
+async function deleteWs() {
+  if (!editingWsId) return;
+  if (!confirm('Chat o\'chirilsinmi? Tarix ham yo\'qoladi.')) return;
+  await apiFetch(`${API}/api/workspaces/${editingWsId}`, {method: 'DELETE'});
+  delete chatHistory[editingWsId];
+  saveHistory();
+  closeWsModal();
+  currentWsId = null;
+  await loadWorkspaces();
+}
+
+// ========================= CTX MENU =========================
+let ctxWsId = null;
+function openCtx(e, wid) {
+  e.preventDefault?.();
+  ctxWsId = wid;
+  const menu = $('ctxMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('open');
+}
+document.addEventListener('click', () => $('ctxMenu').classList.remove('open'));
+function ctxAction(action) {
+  const wid = ctxWsId;
+  if (action === 'edit') openWsModal(wid);
+  else if (action === 'api') { selectWs(wid); openApiModal(); }
+  else if (action === 'clear') {
+    if (confirm('Tarix tozalansinmi?')) {
+      apiFetch(`${API}/api/workspaces/${wid}/messages`, {method: 'DELETE'})
+        .then(() => { chatHistory[wid] = []; if (wid === currentWsId) renderChat(); });
+    }
+  } else if (action === 'delete') {
+    editingWsId = wid; deleteWs();
+  }
+}
+
+// ========================= API MODAL =========================
+function openApiModal() {
+  if (!currentWs) return;
+  const ws = currentWs;
+  const e = ws.endpoints || {};
+  $('apiModalBody').innerHTML = `
+    <p style="color:var(--muted); font-size:13px; margin-top:0;">
+      Bu chat uchun avtomatik API yaratildi. Tashqi tizimdan ham foydalanish mumkin.
+    </p>
+    <div class="cfg-section">
+      <h4>🔑 API kalit</h4>
+      <div class="api-row">
+        <code>${ws.api_key}</code>
+        <button class="copy-btn" onclick="copy('${ws.api_key}')">📋</button>
+        <button class="copy-btn" onclick="regenKey('${ws.id}')">🔄 Yangilash</button>
+      </div>
+    </div>
+    <div class="cfg-section">
+      <h4>📡 Endpointlar</h4>
+      <div class="api-row">
+        <code>POST ${e.ask}</code>
+        <button class="copy-btn" onclick="copy('${e.ask}')">📋</button>
+      </div>
+      <div class="api-row">
+        <code>POST ${e.ask_stream}</code>
+        <button class="copy-btn" onclick="copy('${e.ask_stream}')">📋</button>
+      </div>
+      <div class="api-row">
+        <code>POST ${e.upload}</code>
+        <button class="copy-btn" onclick="copy('${e.upload}')">📋</button>
+      </div>
+      <div class="api-row">
+        <code>POST ${e.ask}_with_file</code>
+        <button class="copy-btn" onclick="copy('${e.ask}_with_file')">📋</button>
+      </div>
+      <div style="font-size:11px; color:var(--muted); margin-top:6px">
+        💡 <b>ask_with_file</b> — bir requestda fayl yuklash + savol berish (eng qulay)
+      </div>
+    </div>
+
+    <div class="cfg-section">
+      <h4>📎 Fayl + savol birga (ask_with_file)</h4>
+      <pre class="code">curl -X POST ${e.ask}_with_file \\
+  -H "X-API-Key: ${ws.api_key}" \\
+  -F "file=@/path/to/file.pdf" \\
+  -F "question=Bu hujjatda kamchiliklar bormi?"</pre>
+    </div>
+
+    <div class="cfg-section">
+      <h4>🐍 Python — fayl + savol</h4>
+      <pre class="code">import httpx
+
+r = httpx.post(
+    "${e.ask}_with_file",
+    headers={"X-API-Key": "${ws.api_key}"},
+    files={"file": open("hujjat.pdf", "rb")},
+    data={"question": "Shartnoma summasi qancha?"}
+)
+print(r.json())</pre>
+    </div>
+
+    <div class="cfg-section">
+      <h4>💡 Misol (curl, matn savol)</h4>
+      <pre class="code">${ws.curl_example}</pre>
+      <button class="copy-btn" onclick="copy(\`${ws.curl_example.replace(/`/g, '\\`')}\`)">📋 Nusxa olish</button>
+    </div>
+    <div class="cfg-section">
+      <h4>🐍 Python misol</h4>
+      <pre class="code">import httpx
+
+r = httpx.post(
+    "${e.ask}",
+    headers={"X-API-Key": "${ws.api_key}"},
+    json={"question": "Shartnoma summasi qancha?"}
+)
+print(r.json())</pre>
+    </div>
+  `;
+  $('apiModal').classList.add('open');
+}
+function closeApiModal() { $('apiModal').classList.remove('open'); }
+async function regenKey(wid) {
+  if (!confirm('Eski API kalit ishlamay qoladi. Davom etilsinmi?')) return;
+  await apiFetch(`${API}/api/workspaces/${wid}/regenerate_key`, {method: 'POST'});
+  await loadWorkspaces();
+  openApiModal();
+}
+
+// ========================= CONFIG MODAL =========================
+let currentCfg = null, cfgHints = {}, availableModels = [];
+function openConfig() { $('cfgModal').classList.add('open'); loadConfig(); }
+function closeConfig() { $('cfgModal').classList.remove('open'); $('cfgStatus').textContent = ''; }
+
+async function loadConfig() {
+  try {
+    const r = await apiFetch(`${API}/api/config`);
+    const j = await r.json();
+    currentCfg = j.config; cfgHints = j.field_hints || {}; availableModels = j.available_models || [];
+    renderConfig();
+  } catch (e) { $('cfgBody').innerHTML = `<div class="cfg-status err">Xato: ${e.message}</div>`; }
+}
+
+function modelOpts(id, selected) {
+  const opts = (availableModels || []).map(m => {
+    const sel = m.name === selected ? 'selected' : '';
+    const meta = m.param_size ? ` (${m.param_size})` : '';
+    return `<option value="${m.name}" ${sel}>${m.name}${meta}</option>`;
+  }).join('');
+  const has = (availableModels || []).some(m => m.name === selected);
+  const cur = (!has && selected) ? `<option value="${selected}" selected>${selected} (yuklanmagan)</option>` : '';
+  const empty = !availableModels.length ?
+    `<option value="" disabled ${!selected?'selected':''}>— model topilmadi —</option>` : '';
+  return `<select id="${id}">${empty}${cur}${opts}</select>`;
+}
+
+function renderConfig() {
+  const c = currentCfg, h = cfgHints;
+  $('cfgBody').innerHTML = `
+    <div class="cfg-section">
+      <h4>🤖 Modellar <button class="icon-btn" style="float:right; font-size:11px; padding:2px 8px;" onclick="loadConfig()">🔄</button></h4>
+      <div class="cfg-row"><label>Chat / LLM</label>${modelOpts('f_llm_model', c.llm_model)}</div>
+      <div class="cfg-row"><label>Embedding</label>${modelOpts('f_embedding_model', c.embedding_model)}</div>
+    </div>
+    <div class="cfg-section">
+      <h4>🧠 Generation</h4>
+      <div class="cfg-row"><label>Reasoning</label>
+        <select id="f_reasoning">
+          ${['low','medium','high'].map(v=>`<option ${c.reasoning===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cfg-row"><label>Temperature</label>
+        <input id="f_llm_temperature" type="number" min="0" max="2" step="0.05" value="${c.llm_temperature}" /></div>
+      <div class="cfg-row"><label>Max tokens</label>
+        <input id="f_llm_max_tokens" type="number" min="64" max="8192" step="64" value="${c.llm_max_tokens}" /></div>
+    </div>
+    <div class="cfg-section">
+      <h4>🔍 RAG</h4>
+      <div class="cfg-row"><label>Top-K</label>
+        <input id="f_top_k" type="number" min="1" max="20" value="${c.top_k}" /></div>
+      <div class="cfg-row"><label>Chunk hajmi</label>
+        <input id="f_chunk_size" type="number" min="100" max="2000" value="${c.chunk_size}" /></div>
+      <div class="cfg-row"><label>Chunk qoplama</label>
+        <input id="f_chunk_overlap" type="number" min="0" max="500" value="${c.chunk_overlap}" /></div>
+    </div>
+    <div class="cfg-section">
+      <h4>⚡ Kesh</h4>
+      <div class="cfg-row"><label>Yoqilganmi</label>
+        <select id="f_use_cache">
+          <option value="true" ${c.use_cache?'selected':''}>Yoqilgan</option>
+          <option value="false" ${!c.use_cache?'selected':''}>Oʻchirilgan</option>
+        </select></div>
+      <div class="cfg-row"><label>Threshold</label>
+        <input id="f_cache_similarity_threshold" type="number" min="0.5" max="1" step="0.01" value="${c.cache_similarity_threshold}" /></div>
+    </div>
+  `;
+}
+async function saveConfig() {
+  $('cfgStatus').textContent = 'Saqlanyapti…';
+  const updates = {
+    llm_model: $('f_llm_model').value,
+    embedding_model: $('f_embedding_model').value,
+    reasoning: $('f_reasoning').value,
+    llm_temperature: parseFloat($('f_llm_temperature').value),
+    llm_max_tokens: parseInt($('f_llm_max_tokens').value),
+    top_k: parseInt($('f_top_k').value),
+    chunk_size: parseInt($('f_chunk_size').value),
+    chunk_overlap: parseInt($('f_chunk_overlap').value),
+    use_cache: $('f_use_cache').value === 'true',
+    cache_similarity_threshold: parseFloat($('f_cache_similarity_threshold').value),
+  };
+  try {
+    const r = await apiFetch(`${API}/api/config`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({updates})
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail || 'xato');
+    $('cfgStatus').className = 'cfg-status ok';
+    $('cfgStatus').textContent = '✓ Saqlandi';
+    if (j.warnings?.length && confirm(j.warnings.join('\n') + '\n\nHozir tozalansinmi?')) {
+      const r2 = await apiFetch(`${API}/api/admin/reset_vectors`, {method: 'POST'});
+      const j2 = await r2.json();
+      alert(`Tayyor. Embedding: ${j2.embedding_model}, dim: ${j2.new_dim}`);
+    }
+    setTimeout(() => $('cfgStatus').textContent = '', 2500);
+  } catch (e) {
+    $('cfgStatus').className = 'cfg-status err';
+    $('cfgStatus').textContent = 'Xato: ' + e.message;
+  }
+}
+async function resetConfig() {
+  if (!confirm('Standartga qaytarilsinmi?')) return;
+  await apiFetch(`${API}/api/config/reset`, {method: 'POST'});
+  loadConfig();
+}
+
+// ========================= MONITORING =========================
+let monStreamReader = null, monStopped = false;
+
+async function openMonitoring() {
+  $('monModal').classList.add('open');
+  monStopped = false;
+  await refreshMonitoring();
+  startMonitoringStream();
+}
+function closeMonitoring() {
+  $('monModal').classList.remove('open');
+  monStopped = true;
+  if (monStreamReader) {
+    try { monStreamReader.cancel(); } catch {}
+    monStreamReader = null;
+  }
+}
+
+function renderMonitoring(snap) {
+  const body = $('monBody');
+  const sys = snap.system || {};
+  const gpu = snap.gpu;
+  const ol = snap.ollama || {};
+  const loaded = ol.loaded_models || [];
+  const available = ol.available_models || [];
+  const db = snap.db || {};
+
+  // Helper
+  const bar = (pct, label) => {
+    const cls = pct > 90 ? 'err' : pct > 70 ? 'warn' : '';
+    return `<div class="progress"><div class="bar ${cls}" style="width:${Math.min(pct, 100)}%"></div></div>`;
+  };
+  const gb = (b) => (b / 1024**3).toFixed(2) + ' GB';
+
+  let html = `
+    <div class="cfg-section">
+      <h4>🖥️ Server (backend container)</h4>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="label">CPU</div>
+          <div class="val">${sys.cpu_percent?.toFixed?.(1) ?? '—'}%</div>
+          ${bar(sys.cpu_percent || 0)}
+        </div>
+        <div class="stat">
+          <div class="label">RAM</div>
+          <div class="val">${sys.memory_percent?.toFixed?.(1) ?? '—'}%</div>
+          <div class="sub">${sys.memory_used_gb ?? '?'} / ${sys.memory_total_gb ?? '?'} GB</div>
+          ${bar(sys.memory_percent || 0)}
+        </div>
+        <div class="stat">
+          <div class="label">Disk</div>
+          <div class="val">${sys.disk_percent?.toFixed?.(1) ?? '—'}%</div>
+          <div class="sub">${sys.disk_used_gb ?? '?'} / ${sys.disk_total_gb ?? '?'} GB</div>
+          ${bar(sys.disk_percent || 0)}
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (gpu) {
+    const memUsed = gpu.mem_used || gpu.alt_mem_used;
+    const memTotal = gpu.mem_total || gpu.alt_mem_total;
+    const util = gpu.gpu_util || (gpu.alt_util && gpu.alt_util * 100);
+    const temp = gpu.temp || gpu.alt_temp;
+    const power = gpu.power;
+    html += `
+      <div class="cfg-section">
+        <h4>🎮 GPU</h4>
+        <div class="stat-grid">
+          ${util != null ? `
+          <div class="stat">
+            <div class="label">Yuklanish</div>
+            <div class="val">${util.toFixed(1)}%</div>
+            ${bar(util)}
+          </div>` : ''}
+          ${memUsed && memTotal ? `
+          <div class="stat">
+            <div class="label">VRAM</div>
+            <div class="val">${((memUsed/memTotal)*100).toFixed(1)}%</div>
+            <div class="sub">${gb(memUsed)} / ${gb(memTotal)}</div>
+            ${bar((memUsed/memTotal)*100)}
+          </div>` : ''}
+          ${temp != null ? `
+          <div class="stat">
+            <div class="label">Harorat</div>
+            <div class="val">${temp.toFixed(0)}°C</div>
+          </div>` : ''}
+          ${power != null ? `
+          <div class="stat">
+            <div class="label">Quvvat</div>
+            <div class="val">${power.toFixed(0)} W</div>
+          </div>` : ''}
+        </div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="cfg-section">
+        <h4>🎮 GPU</h4>
+        <div class="cfg-status" style="padding: 12px; background: var(--panel-2); border-radius: 8px;">
+          GPU statistikasi mavjud emas.<br>
+          <span style="font-size: 11px;">.env'da <code>GPU_STATS_URL=http://server:port/metrics</code> ko'rsating
+          (nvidia-gpu-exporter yoki nvidia-dcgm-exporter).</span>
+        </div>
+      </div>
+    `;
+  }
+
+  html += `
+    <div class="cfg-section">
+      <h4>🤖 Ollama — yuklangan modellar (VRAM da)</h4>
+      ${loaded.length ? loaded.map(m => `
+        <div class="model-card">
+          <div>
+            <div class="name">${m.name}</div>
+            <div class="size">${m.details?.parameter_size || ''} • Context: ${m.context_length || '—'}</div>
+          </div>
+          <div class="size">${gb(m.size_vram || m.size || 0)} VRAM</div>
+        </div>
+      `).join('') : '<div class="cfg-status" style="padding:8px">Hech qaysi model yuklanmagan</div>'}
+    </div>
+    <div class="cfg-section">
+      <h4>💾 Diskdagi modellar (${available.length} ta)</h4>
+      ${available.slice(0, 10).map(m => `
+        <div class="model-card">
+          <div class="name">${m.name}</div>
+          <div class="size">${gb(m.size || 0)}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="cfg-section">
+      <h4>📊 Database statistika</h4>
+      <div class="stat-grid">
+        <div class="stat"><div class="label">Foydalanuvchilar</div><div class="val">${db.users ?? '—'}</div></div>
+        <div class="stat"><div class="label">Jami xabarlar</div><div class="val">${db.messages_total ?? '—'}</div></div>
+        <div class="stat"><div class="label">24 soatda</div><div class="val">${db.messages_last_24h ?? '—'}</div></div>
+      </div>
+    </div>
+  `;
+  body.innerHTML = html;
+}
+
+async function refreshMonitoring() {
+  try {
+    const r = await apiFetch(`${API}/api/monitoring/snapshot`);
+    const snap = await r.json();
+    renderMonitoring(snap);
+  } catch (e) {
+    $('monBody').innerHTML = `<div class="cfg-status err">Xato: ${e.message}</div>`;
+  }
+}
+
+async function startMonitoringStream() {
+  if (!authToken) return;
+  try {
+    // SSE'ni fetch orqali — chunki standart EventSource header qo'shmaydi
+    const resp = await apiFetch(`${API}/api/monitoring/stream`);
+    if (!resp.ok) return;
+    const reader = resp.body.getReader();
+    monStreamReader = reader;
+    const decoder = new TextDecoder();
+    let buf = '';
+    let lastSnapshot = null;
+    while (!monStopped) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        const m = line.match(/^data:\s*(.+)$/m);
+        if (!m) continue;
+        try {
+          const obj = JSON.parse(m[1]);
+          // Faqat o'zgargan qismni — to'liq snapshot qilamiz
+          lastSnapshot = lastSnapshot ? Object.assign({}, lastSnapshot, {
+            ollama: { ...lastSnapshot.ollama, loaded_models: obj.loaded_models },
+            gpu: obj.gpu,
+            system: obj.system,
+          }) : null;
+          // Birinchi snapshot uchun refreshMonitoring chaqirilgan — keyingilarda
+          // faqat real-time qismlarni yangilaymiz
+          if (!$('monModal').classList.contains('open')) break;
+          // Yangi snapshot'ni request qilamiz (oddiy yo'l)
+          // Yoki tezroq — faqat gpu+system+loaded yangilanadi
+        } catch {}
+      }
+    }
+  } catch (e) {
+    console.warn('Monitoring stream xato:', e);
+  }
+}
+
+// ========================= FINE-TUNING (admin) =========================
+let ftCurrentTab = 'datasets';
+let ftCurrentDatasetId = null;
+let ftJobsTimer = null;
+
+async function openFineTune() {
+  $('ftModal').classList.add('open');
+  await ftTab('datasets');
+}
+function closeFineTune() {
+  $('ftModal').classList.remove('open');
+  if (ftJobsTimer) clearInterval(ftJobsTimer);
+  ftJobsTimer = null;
+}
+
+async function ftTab(tab) {
+  ftCurrentTab = tab;
+  ['Ds', 'Items', 'Jobs', 'Help'].forEach(t => {
+    $('ftTab' + t).classList.toggle('active', tab === t.toLowerCase());
+  });
+  if (ftJobsTimer) { clearInterval(ftJobsTimer); ftJobsTimer = null; }
+
+  if (tab === 'datasets') await renderDatasets();
+  else if (tab === 'items') await renderItems();
+  else if (tab === 'jobs') {
+    await renderJobs();
+    ftJobsTimer = setInterval(renderJobs, 5000);
+  }
+  else if (tab === 'help') renderHelp();
+}
+
+async function renderDatasets() {
+  try {
+    const r = await apiFetch(`${API}/api/finetune/datasets`);
+    const j = await r.json();
+    const items = j.items || [];
+    $('ftContent').innerHTML = `
+      <div style="margin-bottom:14px; display:flex; gap:8px;">
+        <button class="btn-primary" onclick="ftCreateDataset()">＋ Yangi dataset</button>
+      </div>
+      ${items.length === 0
+        ? '<div class="cfg-status" style="padding:30px; text-align:center">Dataset yo\'q. Birinchi datasetni yarating.</div>'
+        : items.map(ds => `
+          <div class="model-card" style="flex-direction:column; align-items:stretch; padding:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div class="name" style="font-size:14px">${ds.name}</div>
+                <div class="size">${ds.description || ''}</div>
+                <div class="size" style="margin-top:4px; color:var(--accent-2)">${ds.item_count} ta misol</div>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button class="copy-btn" onclick="ftOpenItems(${ds.id})">📝 Koʻrish</button>
+                <button class="copy-btn" onclick="ftImportChat(${ds.id})">💬 Chat'dan import</button>
+                <button class="copy-btn" onclick="ftExportJsonl(${ds.id})">📥 JSONL</button>
+                <button class="copy-btn" onclick="ftStartTraining(${ds.id})" style="color:var(--ok)">🚀 Train</button>
+                <button class="copy-btn" onclick="ftDeleteDataset(${ds.id})" style="color:var(--err)">🗑</button>
+              </div>
+            </div>
+          </div>
+        `).join('')
+      }
+    `;
+  } catch (e) {
+    $('ftContent').innerHTML = `<div class="cfg-status err">Xato: ${e.message}</div>`;
+  }
+}
+
+async function ftCreateDataset() {
+  const name = prompt('Dataset nomi:');
+  if (!name) return;
+  const description = prompt('Tavsif (ixtiyoriy):') || '';
+  try {
+    await apiFetch(`${API}/api/finetune/datasets`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, description})
+    });
+    renderDatasets();
+  } catch (e) { alert('Xato: ' + e.message); }
+}
+
+async function ftDeleteDataset(id) {
+  if (!confirm('Dataset va barcha misollar oʻchirilsinmi?')) return;
+  await apiFetch(`${API}/api/finetune/datasets/${id}`, {method: 'DELETE'});
+  renderDatasets();
+}
+
+async function ftImportChat(id) {
+  const wid = prompt('Workspace ID (bo\'sh qoldirsangiz, barcha chatlardan):') || '';
+  const onlyGood = confirm('Faqat yaxshi javoblarni (RAG mode bilan) olamizmi?');
+  try {
+    const r = await apiFetch(`${API}/api/finetune/datasets/${id}/import_chat`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({workspace_id: wid || null, only_good: onlyGood})
+    });
+    const j = await r.json();
+    alert(`✓ ${j.added} ta misol qo\'shildi`);
+    renderDatasets();
+  } catch (e) { alert('Xato: ' + e.message); }
+}
+
+async function ftExportJsonl(id) {
+  window.open(`${API}/api/finetune/datasets/${id}/export?token=${authToken}`, '_blank');
+}
+
+async function ftOpenItems(id) {
+  ftCurrentDatasetId = id;
+  $('ftTabItems').style.display = 'block';
+  await ftTab('items');
+}
+
+async function renderItems() {
+  if (!ftCurrentDatasetId) {
+    $('ftContent').innerHTML = '<div class="cfg-status">Dataset tanlang</div>';
+    return;
+  }
+  try {
+    const r = await apiFetch(`${API}/api/finetune/datasets/${ftCurrentDatasetId}/items?limit=100`);
+    const j = await r.json();
+    const items = j.items || [];
+    $('ftContent').innerHTML = `
+      <div style="margin-bottom:14px;">
+        <button class="btn-primary" onclick="ftAddItem()">＋ Qoʻshish</button>
+        <button class="btn-ghost" onclick="ftTab('datasets')" style="margin-left:8px">← Datasetlar</button>
+        <span class="cfg-status" style="margin-left:12px">${items.length} ta misol</span>
+      </div>
+      ${items.length === 0
+        ? '<div class="cfg-status" style="padding:30px; text-align:center">Misol yo\'q</div>'
+        : items.map(it => `
+          <div class="model-card" style="flex-direction:column; align-items:stretch; padding:12px;">
+            <div style="font-size:12px; color:var(--muted); margin-bottom:6px">
+              #${it.id} • sifat: ${'⭐'.repeat(it.quality)}
+              <span style="float:right">
+                <button class="copy-btn" onclick="ftDeleteItem(${it.id})">🗑</button>
+              </span>
+            </div>
+            <div style="font-size:12px; margin-bottom:4px"><b style="color:var(--accent-2)">Savol:</b> ${escapeHtml(it.instruction.slice(0,200))}${it.instruction.length>200?'…':''}</div>
+            <div style="font-size:12px"><b style="color:var(--ok)">Javob:</b> ${escapeHtml((it.output||'').slice(0,300))}${(it.output||'').length>300?'…':''}</div>
+          </div>
+        `).join('')
+      }
+    `;
+  } catch (e) {
+    $('ftContent').innerHTML = `<div class="cfg-status err">Xato: ${e.message}</div>`;
+  }
+}
+
+function escapeHtml(s) {
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+async function ftAddItem() {
+  const instruction = prompt('Savol (instruction):');
+  if (!instruction) return;
+  const output = prompt('Kerakli javob (output):');
+  if (!output) return;
+  try {
+    await apiFetch(`${API}/api/finetune/datasets/${ftCurrentDatasetId}/items`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({instruction, output, quality: 5})
+    });
+    renderItems();
+  } catch (e) { alert('Xato: ' + e.message); }
+}
+
+async function ftDeleteItem(id) {
+  if (!confirm('O\'chirilsinmi?')) return;
+  await apiFetch(`${API}/api/finetune/datasets/${ftCurrentDatasetId}/items/${id}`, {method: 'DELETE'});
+  renderItems();
+}
+
+async function ftStartTraining(datasetId) {
+  const name = prompt('Yangi model nomi (masalan: audit-v1):');
+  if (!name) return;
+  const epochs = parseInt(prompt('Epochs (3 standart):', '3')) || 3;
+  try {
+    const r = await apiFetch(`${API}/api/finetune/jobs`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        dataset_id: datasetId,
+        base_model: 'gpt-oss:20b',
+        output_model_name: name,
+        epochs, learning_rate: 2e-4, batch_size: 2, lora_r: 16,
+      })
+    });
+    const j = await r.json();
+    alert(`✓ Training boshlandi (Job #${j.id}). 'Training jobs' tab'da kuzating.`);
+    ftTab('jobs');
+  } catch (e) { alert('Xato: ' + e.message); }
+}
+
+async function renderJobs() {
+  try {
+    const r = await apiFetch(`${API}/api/finetune/jobs`);
+    const j = await r.json();
+    const items = j.items || [];
+    $('ftContent').innerHTML = items.length === 0
+      ? '<div class="cfg-status" style="padding:30px; text-align:center">Training jobs yo\'q</div>'
+      : items.map(job => {
+          const statusColor = job.status === 'completed' ? 'var(--ok)' :
+                              job.status === 'failed' ? 'var(--err)' :
+                              job.status === 'running' ? 'var(--accent-2)' : 'var(--muted)';
+          const pct = Math.round((job.progress || 0) * 100);
+          return `
+            <div class="model-card" style="flex-direction:column; align-items:stretch; padding:14px; margin-bottom:8px">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+                <div>
+                  <div class="name" style="font-size:14px">${job.output_model_name}</div>
+                  <div class="size">Base: ${job.base_model} • Dataset: ${job.dataset_id}</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="color:${statusColor}; font-weight:600; font-size:13px">${job.status.toUpperCase()}</div>
+                  ${job.status === 'running' ? `<button class="copy-btn" onclick="ftCancelJob(${job.id})" style="color:var(--err); margin-top:4px">Bekor</button>` : ''}
+                </div>
+              </div>
+              ${job.status === 'running' || job.status === 'completed'
+                ? `<div class="progress"><div class="bar" style="width:${pct}%; background:${statusColor}"></div></div>
+                   <div style="font-size:11px; color:var(--muted); margin-top:4px">${pct}%</div>`
+                : ''
+              }
+              ${job.error ? `<div style="color:var(--err); font-size:12px; margin-top:8px">❌ ${escapeHtml(job.error)}</div>` : ''}
+              ${job.log_tail ? `<details style="margin-top:8px"><summary style="cursor:pointer; font-size:12px; color:var(--muted)">📜 Log koʻrish</summary><pre class="code" style="margin-top:6px; max-height:300px">${escapeHtml(job.log_tail.slice(-3000))}</pre></details>` : ''}
+            </div>
+          `;
+        }).join('');
+  } catch (e) {
+    $('ftContent').innerHTML = `<div class="cfg-status err">Xato: ${e.message}</div>`;
+  }
+}
+
+async function ftCancelJob(id) {
+  if (!confirm('Training to\'xtatilsinmi?')) return;
+  await apiFetch(`${API}/api/finetune/jobs/${id}/cancel`, {method: 'POST'});
+  renderJobs();
+}
+
+function renderHelp() {
+  $('ftContent').innerHTML = `
+    <div class="cfg-section">
+      <h4>🎓 Fine-tuning nima?</h4>
+      <p style="color:var(--muted); font-size:13px; line-height:1.6">
+        Sizning sohangizdagi savol-javoblarni ko'rsatib, gpt-oss modelni
+        <b>aynan Hisob palatasi uslubida</b> javob berishga oʻrgatish.
+      </p>
+    </div>
+    <div class="cfg-section">
+      <h4>📋 Bosqichlar</h4>
+      <ol style="color:var(--muted); font-size:13px; line-height:1.7">
+        <li><b>Dataset yarating</b> — masalan "Audit Q&A v1"</li>
+        <li><b>Misollar qoʻshing</b>:
+          <ul style="margin-top:6px">
+            <li>💬 <b>Chat tarixidan import</b> (eng tezi) — yaxshi javoblar dataset'ga qoʻshiladi</li>
+            <li>📝 Qo'lda yozish — savol va kerakli javob</li>
+            <li>📥 JSONL fayl yuklash (eski Q&A bazasi)</li>
+          </ul>
+        </li>
+        <li><b>100-1000 ta misol</b> yetarli (minimum 50)</li>
+        <li>🚀 <b>Train</b> tugmasini bosing — server'da QLoRA training boshlanadi</li>
+        <li>30-90 daqiqa kutib, "completed" boʻlganda — yangi model tayyor</li>
+        <li>⚙️ Sozlamalar'dan yangi modelni tanlab ishlatish mumkin</li>
+      </ol>
+    </div>
+    <div class="cfg-section">
+      <h4>💻 Server'da kerakli paketlar</h4>
+      <pre class="code">pip install unsloth trl peft transformers torch bitsandbytes accelerate datasets</pre>
+      <p style="color:var(--muted); font-size:12px; margin-top:8px">
+        Training skript: <code>scripts/train.py</code><br>
+        Adapter saqlash joyi: <code>/data/trained_models/</code><br>
+        Ollama'ga ro'yxatdan o'tkazish: <code>scripts/register_model.sh</code>
+      </p>
+    </div>
+    <div class="cfg-section">
+      <h4>📊 Resurs talablari</h4>
+      <table style="width:100%; font-size:12px">
+        <tr><td style="padding:4px">Min GPU VRAM</td><td style="padding:4px"><b>24 GB</b> (QLoRA 4-bit)</td></tr>
+        <tr><td style="padding:4px">Tavsiya</td><td style="padding:4px">48 GB (sizdagi)</td></tr>
+        <tr><td style="padding:4px">Training vaqti</td><td style="padding:4px">~30 daq (100 misol), 2-3 soat (1000 misol)</td></tr>
+        <tr><td style="padding:4px">Disk hajmi</td><td style="padding:4px">~13 GB GGUF model uchun</td></tr>
+      </table>
+    </div>
+  `;
+}
+
+// ========================= KNOWLEDGE BASE (admin) =========================
+let kbCurrentTarget = 'laws';
+
+async function openKb() {
+  $('kbModal').classList.add('open');
+  await kbTab('laws');
+}
+function closeKb() { $('kbModal').classList.remove('open'); }
+
+async function kbTab(target) {
+  kbCurrentTarget = target;
+  $('kbTabLaws').classList.toggle('active', target === 'laws');
+  $('kbTabReports').classList.toggle('active', target === 'reports');
+  await loadKbFiles();
+}
+
+async function loadKbFiles() {
+  // /api/all_documents'dan filter qilamiz: collection = target
+  try {
+    const r = await apiFetch(`${API}/api/all_documents?limit=500`);
+    const j = await r.json();
+    const collName = kbCurrentTarget === 'laws' ? 'laws' : 'audit_reports';
+    const items = (j.items || []).filter(d => d.collection === collName);
+    renderKbList(items);
+  } catch (e) {
+    $('kbList').innerHTML = `<div class="cfg-status err">Xato: ${e.message}</div>`;
+  }
+}
+
+function renderKbList(items) {
+  const label = kbCurrentTarget === 'laws' ? 'qonun' : 'audit hisoboti';
+  if (!items.length) {
+    $('kbList').innerHTML = `<div class="cfg-status" style="padding:30px; text-align:center">Hech qanday ${label} yuklanmagan</div>`;
+    return;
+  }
+  $('kbList').innerHTML = `
+    <div style="margin-bottom:8px; color:var(--muted); font-size:12px">${items.length} ta fayl</div>
+    ${items.map(d => `
+      <div class="model-card" style="padding:10px 12px">
+        <div style="flex:1; min-width:0">
+          <div class="name" style="font-weight:600">${escapeHtml(d.filename)}</div>
+          <div class="size">${fmtSize(d.size_bytes)} • ${d.chunks} chunks • ${fmtDate(d.created_at)}</div>
+        </div>
+        <button class="copy-btn" onclick="kbDelete('${d.doc_id}','${escapeHtml(d.filename).replace(/'/g,'\\\'')}')" style="color:var(--err)">🗑</button>
+      </div>
+    `).join('')}
+  `;
+}
+
+async function kbUpload(e) {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  e.target.value = '';
+  const status = $('kbUploadStatus');
+  let done = 0, failed = 0;
+
+  for (const file of files) {
+    status.innerHTML = `<div class="cfg-status">⏳ Yuklanmoqda: ${escapeHtml(file.name)} (${done + failed + 1}/${files.length})</div>`;
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('target', kbCurrentTarget);
+    try {
+      const r = await apiFetch(`${API}/api/documents/upload`, {method: 'POST', body: fd});
+      if (!r.ok) {
+        const j = await r.json();
+        throw new Error(j.detail || 'upload xato');
+      }
+      done++;
+    } catch (err) {
+      console.error(file.name, err);
+      failed++;
+    }
+  }
+  status.innerHTML = `<div class="cfg-status ${failed ? 'err' : 'ok'}">✓ ${done} muvaffaqiyatli, ${failed} xato</div>`;
+  setTimeout(() => { status.innerHTML = ''; }, 4000);
+  await loadKbFiles();
+}
+
+async function kbDelete(docId, filename) {
+  if (!confirm(`"${filename}" o'chirilsinmi?\nBu fayl barcha auditorlar uchun ko'rinmay qoladi.`)) return;
+  try {
+    await apiFetch(`${API}/api/all_documents/${docId}`, {method: 'DELETE'});
+    await loadKbFiles();
+  } catch (e) { alert('Xato: ' + e.message); }
+}
+
+// ========================= DOCUMENTS REGISTRY =========================
+let docsSearchTimer = null;
+
+async function openDocs() {
+  $('docsModal').classList.add('open');
+  await loadDocs();
+  if (currentUser?.role === 'admin') {
+    await loadDocsStats();
+    await loadDocsUserFilter();
+  } else {
+    $('docsUserFilter').style.display = 'none';
+  }
+}
+function closeDocs() { $('docsModal').classList.remove('open'); }
+
+function searchDocs() {
+  clearTimeout(docsSearchTimer);
+  docsSearchTimer = setTimeout(loadDocs, 350);
+}
+
+async function loadDocsStats() {
+  try {
+    const r = await apiFetch(`${API}/api/all_documents/stats`);
+    if (!r.ok) return;
+    const s = await r.json();
+    const gb = (b) => (b / 1024**3).toFixed(2);
+    $('docsStats').innerHTML = `
+      <div class="stat-grid">
+        <div class="stat"><div class="label">Jami fayllar</div><div class="val">${s.total}</div></div>
+        <div class="stat"><div class="label">Umumiy hajm</div><div class="val">${gb(s.total_size_bytes)} <span style="font-size:14px">GB</span></div></div>
+        <div class="stat"><div class="label">Chunklar</div><div class="val">${s.total_chunks}</div></div>
+        <div class="stat"><div class="label">OCR ishlatilgan</div><div class="val">${s.ocr_count}</div></div>
+      </div>
+    `;
+  } catch {}
+}
+
+async function loadDocsUserFilter() {
+  try {
+    const r = await apiFetch(`${API}/api/users`);
+    const j = await r.json();
+    const sel = $('docsUserFilter');
+    sel.innerHTML = '<option value="">Barcha foydalanuvchilar</option>' +
+      (j.items || []).map(u =>
+        `<option value="${u.id}">${u.full_name || u.username} (${u.sector || '—'})</option>`
+      ).join('');
+  } catch {}
+}
+
+function fmtSize(b) {
+  if (!b) return '0';
+  if (b < 1024) return b + ' B';
+  if (b < 1024**2) return (b/1024).toFixed(1) + ' KB';
+  if (b < 1024**3) return (b/1024**2).toFixed(1) + ' MB';
+  return (b/1024**3).toFixed(2) + ' GB';
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('uz-UZ', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+  } catch { return iso; }
+}
+
+async function loadDocs() {
+  const search = $('docsSearch').value.trim();
+  const userFilter = $('docsUserFilter') ? $('docsUserFilter').value : '';
+  let url = `${API}/api/all_documents?limit=500`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (userFilter) url += `&user_id=${userFilter}`;
+  try {
+    const r = await apiFetch(url);
+    const j = await r.json();
+    renderDocs(j.items || []);
+  } catch (e) {
+    $('docsList').innerHTML = `<div class="cfg-status err">Xato: ${e.message}</div>`;
+  }
+}
+
+function renderDocs(items) {
+  if (!items.length) {
+    $('docsList').innerHTML = '<div class="cfg-status" style="padding:30px; text-align:center">Hech qanday fayl yo\'q</div>';
+    return;
+  }
+  const isAdmin = currentUser?.role === 'admin';
+  $('docsList').innerHTML = `
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <thead>
+        <tr style="text-align:left; border-bottom:1px solid var(--border); color:var(--accent-2)">
+          <th style="padding:8px">📄 Fayl</th>
+          ${isAdmin ? '<th style="padding:8px">👤 Foydalanuvchi</th>' : ''}
+          <th style="padding:8px">📦 Hajm</th>
+          <th style="padding:8px">🧩 Chunks</th>
+          <th style="padding:8px">📅 Sana</th>
+          <th style="padding:8px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${items.map(d => {
+          const userInfo = d.user ?
+            `<b>${d.user.full_name || d.user.username}</b><br><span style="color:var(--muted); font-size:11px">${d.user.sector || '—'}</span>`
+            : '<span style="color:var(--muted)">—</span>';
+          return `
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:8px"><b>${escapeHtml(d.filename)}</b><br>
+              <span style="color:var(--muted); font-size:10px">${d.mime || ''}</span></td>
+            ${isAdmin ? `<td style="padding:8px">${userInfo}</td>` : ''}
+            <td style="padding:8px">${fmtSize(d.size_bytes)}</td>
+            <td style="padding:8px">${d.chunks}</td>
+            <td style="padding:8px; font-size:12px">${fmtDate(d.created_at)}</td>
+            <td style="padding:8px; text-align:right">
+              <button class="copy-btn" onclick="deleteDoc('${d.doc_id}', '${escapeHtml(d.filename).replace(/'/g,'\\\'')}')" style="color:var(--err)">🗑</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div class="cfg-status" style="margin-top:10px; text-align:center">Jami: ${items.length} ta</div>
+  `;
+}
+
+async function deleteDoc(docId, filename) {
+  if (!confirm(`"${filename}" o'chirilsinmi?\nVektor bazadan ham, ro'yxatdan ham o'chiriladi.`)) return;
+  try {
+    const r = await apiFetch(`${API}/api/all_documents/${docId}`, {method: 'DELETE'});
+    if (!r.ok) {
+      const j = await r.json();
+      throw new Error(j.detail || 'O\'chirib bo\'lmadi');
+    }
+    await loadDocs();
+    if (currentUser?.role === 'admin') await loadDocsStats();
+  } catch (e) {
+    alert('Xato: ' + e.message);
+  }
+}
+
+// ========================= USERS (admin) =========================
+async function openUsers() {
+  $('usersModal').classList.add('open');
+  await loadUsers();
+}
+function closeUsers() { $('usersModal').classList.remove('open'); }
+
+async function loadUsers() {
+  try {
+    const r = await apiFetch(`${API}/api/users`);
+    const j = await r.json();
+    renderUsers(j.items || []);
+  } catch (e) {
+    $('usersBody').innerHTML = `<div class="cfg-status err">Xato: ${e.message}</div>`;
+  }
+}
+
+function renderUsers(users) {
+  $('usersBody').innerHTML = `
+    <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+      <thead>
+        <tr style="text-align:left; border-bottom:1px solid var(--border)">
+          <th style="padding:8px">ID</th>
+          <th style="padding:8px">Login</th>
+          <th style="padding:8px">Ism</th>
+          <th style="padding:8px">Soha</th>
+          <th style="padding:8px">Rol</th>
+          <th style="padding:8px">Holat</th>
+          <th style="padding:8px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${users.map(u => `
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:8px; color:var(--muted)">${u.id}</td>
+            <td style="padding:8px"><b>${u.username}</b></td>
+            <td style="padding:8px">${u.full_name || '—'}</td>
+            <td style="padding:8px">${u.sector || '—'}</td>
+            <td style="padding:8px">
+              ${u.role === 'admin' ? '<span style="color:var(--warn)">👑 Admin</span>' : 'User'}
+            </td>
+            <td style="padding:8px">${u.is_active ? '✅' : '❌'}</td>
+            <td style="padding:8px; text-align:right">
+              <button class="copy-btn" onclick="editUser(${u.id})">✏️</button>
+              ${u.username !== 'admin' ? `<button class="copy-btn" onclick="deleteUser(${u.id})" style="color:var(--err)">🗑</button>` : ''}
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function openCreateUser() {
+  const username = prompt('Login (foydalanuvchi nomi):');
+  if (!username) return;
+  const password = prompt('Parol (kamida 6 belgi):');
+  if (!password || password.length < 6) { alert('Parol kamida 6 belgi bo\'lsin'); return; }
+  const full_name = prompt('To\'liq ism (ixtiyoriy):') || '';
+  const sector = prompt('Soha (masalan: Moliya):') || '';
+  apiFetch(`${API}/api/users`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({username, password, full_name, sector, role: 'user'})
+  }).then(r => r.json()).then(j => {
+    if (j.detail) alert('Xato: ' + j.detail);
+    else { alert(`✅ ${j.username} yaratildi`); loadUsers(); }
+  });
+}
+
+function editUser(uid) {
+  const newPass = prompt('Yangi parol (bo\'sh qoldirsangiz, o\'zgarmaydi):');
+  if (newPass === null) return;
+  const body = {};
+  if (newPass) body.password = newPass;
+  apiFetch(`${API}/api/users/${uid}`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  }).then(() => { alert('✓ Yangilandi'); loadUsers(); });
+}
+
+function deleteUser(uid) {
+  if (!confirm('Foydalanuvchi o\'chirilsinmi?')) return;
+  apiFetch(`${API}/api/users/${uid}`, {method: 'DELETE'})
+    .then(() => loadUsers());
+}
+
+// ========================= CROSS-USER API =========================
+// ====== Voice Input (mikrofondan savol) ======
+let recognition = null;
+let isRecording = false;     // logik holat: foydalanuvchi tinglashni xohlaydi
+let userRequestedStop = false;  // foydalanuvchi ⏹ bosdimi
+let voiceTextBefore = '';    // recording boshlanishidan oldingi matn
+let voiceAccumulated = '';   // joriy session'da to'plangan final matn
+
+function updateMicUI() {
+  if (isRecording) {
+    $('micBtn').classList.add('recording');
+    $('micBtn').textContent = '⏹';
+    $('micBtn').title = 'Toʻxtatish';
+  } else {
+    $('micBtn').classList.remove('recording');
+    $('micBtn').textContent = '🎤';
+    $('micBtn').title = 'Ovozli savol (mikrofondan)';
+  }
+}
+
+function initVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    $('micBtn').disabled = true;
+    $('micBtn').title = 'Brauzer voice tanimaydi (Chrome/Edge ishlatish kerak)';
+    $('micBtn').style.opacity = '0.4';
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = 'uz-UZ';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    updateMicUI();
+  };
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) {
+        voiceAccumulated += t + ' ';
+      } else {
+        interim += t;
+      }
+    }
+    const sep = voiceTextBefore && (voiceAccumulated || interim) ? ' ' : '';
+    $('q').value = (voiceTextBefore + sep + voiceAccumulated + interim)
+      .replace(/\s+/g, ' ').trim();
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error === 'no-speech' || e.error === 'aborted') return;
+    if (e.error === 'not-allowed') {
+      alert('Mikrofonga ruxsat berilmagan. Brauzer sozlamalarini tekshiring.');
+      userRequestedStop = true;
+      isRecording = false;
+      updateMicUI();
+    } else {
+      console.warn('Voice xato:', e.error);
+    }
+  };
+
+  recognition.onend = () => {
+    // Brauzer avtomatik to'xtatdi (sukunat sezdi)
+    // Agar foydalanuvchi to'xtatmagan bo'lsa — qaytadan ishga tushiramiz
+    if (isRecording && !userRequestedStop) {
+      // To'plangan matnni voiceTextBefore'ga ko'chiramiz
+      const sep = voiceTextBefore && voiceAccumulated ? ' ' : '';
+      voiceTextBefore = (voiceTextBefore + sep + voiceAccumulated)
+        .replace(/\s+/g, ' ').trim();
+      voiceAccumulated = '';
+      // Restart — kichik delay (brauzer talab qiladi)
+      setTimeout(() => {
+        if (isRecording && !userRequestedStop) {
+          try {
+            recognition.start();
+          } catch (err) {
+            console.warn('Voice restart xato:', err);
+            isRecording = false;
+            updateMicUI();
+          }
+        }
+      }, 150);
+    } else {
+      isRecording = false;
+      updateMicUI();
+    }
+  };
+}
+
+function toggleVoice() {
+  if (!recognition) {
+    alert('Brauzeringiz voice tanimaydi. Chrome/Edge ni sinab koʻring.');
+    return;
+  }
+  if (isRecording) stopVoice();
+  else startVoice();
+}
+
+function startVoice() {
+  userRequestedStop = false;
+  voiceTextBefore = $('q').value;
+  voiceAccumulated = '';
+  isRecording = true;  // logik flag avval — onend restart qilolsin
+  try {
+    recognition.start();
+  } catch (e) {
+    isRecording = false;
+    console.warn('Voice start xato:', e);
+  }
+}
+
+function stopVoice() {
+  userRequestedStop = true;
+  isRecording = false;
+  try { recognition.stop(); } catch {}
+  updateMicUI();
+}
+
+// Init keyin DOM tayyor bo'lgach chaqirish kerak
+initVoice();
+
+// ====== Eksport (PDF / DOCX) ======
+async function exportChat(format) {
+  if (!currentWsId) { alert('Avval chat tanlang'); return; }
+  const btn = format === 'pdf' ? $('expPdfBtn') : $('expDocxBtn');
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  try {
+    const r = await apiFetch(`${API}/api/workspaces/${currentWsId}/export?format=${format}`);
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({detail: 'Eksport xato'}));
+      throw new Error(j.detail || 'Eksport xato');
+    }
+    const blob = await r.blob();
+    // Fayl nomi Content-Disposition'dan
+    const cd = r.headers.get('Content-Disposition') || '';
+    const m = cd.match(/filename="?([^"]+)"?/);
+    const filename = m ? m[1] : `chat.${format}`;
+    // Yuklab olish
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Xato: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+async function openCrossApi() {
+  $('crossModal').classList.add('open');
+  try {
+    const r = await apiFetch(`${API}/api/cross/info`);
+    const j = await r.json();
+    $('crossBody').innerHTML = `
+      <p style="color:var(--muted); font-size:13px; margin-top:0">
+        Bu endpoint <b>barcha foydalanuvchilar</b> hujjatlaridan qidiradi — tashqi tizim integratsiyasi uchun.
+      </p>
+      <div class="cfg-section">
+        <h4>🔑 Master API kalit</h4>
+        <div class="api-row">
+          <code>${j.master_key}</code>
+          <button class="copy-btn" onclick="copy('${j.master_key}')">📋</button>
+        </div>
+        <div class="hint" style="margin-top:6px; font-size:11px; color:var(--muted)">
+          ⚠️ Bu kalit har backend restart'da yangilanadi (hozircha)
+        </div>
+      </div>
+      <div class="cfg-section">
+        <h4>📡 Endpointlar</h4>
+        <div class="api-row">
+          <code>POST ${location.origin.replace(/:\d+$/, ':8000')}${j.endpoint_ask}</code>
+          <button class="copy-btn" onclick="copy('${location.origin.replace(/:\\d+$/, ':8000')}${j.endpoint_ask}')">📋</button>
+        </div>
+        <div class="api-row">
+          <code>POST ${location.origin.replace(/:\d+$/, ':8000')}${j.endpoint_stream}</code>
+          <button class="copy-btn" onclick="copy('${location.origin.replace(/:\\d+$/, ':8000')}${j.endpoint_stream}')">📋</button>
+        </div>
+      </div>
+      <div class="cfg-section">
+        <h4>👥 Tizimdagi foydalanuvchilar (${j.users.length})</h4>
+        ${j.users.map(u => `
+          <div class="model-card">
+            <div>
+              <div class="name">${u.full_name || u.username}</div>
+              <div class="size">${u.sector || '—'}</div>
+            </div>
+            <div class="size">@${u.username}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="cfg-section">
+        <h4>💡 curl misol</h4>
+        <pre class="code">${j.curl_example}</pre>
+      </div>
+    `;
+  } catch (e) {
+    $('crossBody').innerHTML = `<div class="cfg-status err">Xato: ${e.message}</div>`;
+  }
+}
+function closeCrossApi() { $('crossModal').classList.remove('open'); }
+
+// ========================= HEALTH =========================
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/api/health`);
+    const j = await r.json();
+    $('status').className = 'status ' + (j.ok ? 'ok' : 'err');
+    $('status').innerHTML = `<span class="dot"></span>${j.ok ? 'Tayyor' : 'Xato bor'}`;
+  } catch {
+    $('status').className = 'status err';
+    $('status').innerHTML = '<span class="dot"></span>Backend yo\'q';
+  }
+}
+
+function openHelp() {
+  alert(
+    '🏛️ HP-AI audit assistant\n\n' +
+    'Imkoniyatlar:\n' +
+    '• 📚 Asosiy bilim bazasi — admin tomonidan yuklangan qonunlar va eski audit hisobotlari\n' +
+    '• 💬 Shaxsiy chat — o\'z hujjatlaringizni yuklab tahlil qilish\n\n' +
+    'Tugmalar:\n' +
+    '• ＋ Yangi chat — chap panelda\n' +
+    '• 📎 Fayl yuklash — chat ichida (yoki Ctrl+V)\n' +
+    '• 🎤 Ovoz bilan savol\n' +
+    '• 📄 PDF / 📝 DOCX eksport — chat tarixini saqlash\n' +
+    '• 🔗 API — chatga tashqi tizim ulash\n' +
+    '• 📚 Documents — barcha yuklangan fayllar\n' +
+    '• 📊 Monitoring — server holati\n' +
+    '• ⚙️ Sozlamalar — model va RAG parametrlari'
+  );
+}
+
+// ========================= INIT =========================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeWsModal(); closeApiModal(); closeConfig();
+  }
+});
+['wsModal','apiModal','cfgModal','monModal','usersModal','crossModal','ftModal','docsModal','kbModal'].forEach(id => {
+  const el = $(id);
+  if (el) el.addEventListener('click', e => {
+    if (e.target.id === id) e.target.classList.remove('open');
+  });
+});
+
+// Init — auth tekshirib, keyin workspacelarni yuklash
+(async () => {
+  const ok = await checkAuth();
+  if (ok) {
+    await loadWorkspaces();
+  }
+  checkHealth();
+  setInterval(checkHealth, 30000);
+})();
+</script>
+</body>
+</html>

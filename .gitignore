@@ -1,0 +1,53 @@
+# ============================
+# HP-AI audit assistant
+# ============================
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.pyc
+
+# Maxfiy ma'lumotlar
+.env
+.env.local
+*.key
+*.pem
+secrets/
+
+# Foydalanuvchi ma'lumotlari (har serverda alohida)
+data/uploads/*
+data/laws/*
+data/reports/*
+data/datasets/*
+data/trained_models/*
+data/hp_ai.db
+data/hp_ai.db-*
+data/config.json
+data/workspaces.json
+!data/uploads/.gitkeep
+!data/laws/.gitkeep
+!data/reports/.gitkeep
+
+# Qdrant vector storage
+qdrant_storage/
+
+# Docker volume cache
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Yuklab olingan model fayllar
+*.gguf
+*.bin
+*.safetensors
