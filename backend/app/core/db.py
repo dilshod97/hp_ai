@@ -210,10 +210,35 @@ engine = create_async_engine(DB_URL, echo=False, future=True)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
+# Auto-migration: create_all yangi jadval yaratadi, lekin mavjud jadvalga
+# yangi ustun QO'SHMAYDI. Shu ro'yxatdagi ustunlar yetishmasa, ALTER TABLE qilamiz.
+_MIGRATIONS: list[tuple[str, str, str]] = [
+    # (jadval, ustun, SQL tipi)
+    ("messages", "rating", "INTEGER"),
+    ("messages", "rated_by", "INTEGER"),
+    ("documents", "file_path", "VARCHAR(512)"),
+]
+
+
+def _run_migrations(sync_conn) -> None:
+    from sqlalchemy import text
+    for table, column, sql_type in _MIGRATIONS:
+        cols = [
+            r[1] for r in
+            sync_conn.execute(text(f"PRAGMA table_info({table})")).fetchall()
+        ]
+        if cols and column not in cols:
+            sync_conn.execute(
+                text(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}")
+            )
+            log.info("✓ Migration: %s.%s qoʻshildi", table, column)
+
+
 async def init_db() -> None:
     os.makedirs(settings.DATA_DIR, exist_ok=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_run_migrations)
     log.info("✓ SQLite tayyor: %s", DB_PATH)
 
 
