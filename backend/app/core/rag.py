@@ -219,7 +219,7 @@ async def ask(
     )
 
     # Similarity past bo'lsa (meta savol, kontekstda mos kelmaydi) — fallback
-    LOW_SIMILARITY_THRESHOLD = 0.35
+    LOW_SIMILARITY_THRESHOLD = 0.20
     if hits and (hits[0].get("score") or 0) < LOW_SIMILARITY_THRESHOLD:
         hits = []
 
@@ -310,7 +310,7 @@ async def ask_stream(
     )
 
     # Similarity past bo'lsa (meta savol, kontekstda mos kelmaydi) — fallback
-    LOW_SIMILARITY_THRESHOLD = 0.35
+    LOW_SIMILARITY_THRESHOLD = 0.20
     if hits and (hits[0].get("score") or 0) < LOW_SIMILARITY_THRESHOLD:
         hits = []
 
