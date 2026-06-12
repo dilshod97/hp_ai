@@ -27,8 +27,9 @@ services:
     build: ./backend
     container_name: hp_backend
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    # Backend porti TASHQARIDAN koʻrinmaydi — faqat ichki tarmoqdan (nginx)
+    expose:
+      - "8000"
     env_file:
       - .env
     volumes:
@@ -49,6 +50,9 @@ services:
       - "8088:80"
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
 
 volumes:
   redis_data:

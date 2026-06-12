@@ -1568,7 +1568,9 @@ Enter — yuborish, Shift+Enter — yangi qator"></textarea>
 
 <script>
 // ========================= KIRISH =========================
-const API = location.origin.replace(/:\d+$/, ':8000') || 'http://localhost:8000';
+// API URL — nginx proxy bilan bir portda, faqat /api/ prefiks
+// Bu degani: SERVER_IP:8088 → frontend va API ikkalasi ham shu portda
+const API = location.origin;
 
 let workspacesData = [];
 let currentWsId = null;
